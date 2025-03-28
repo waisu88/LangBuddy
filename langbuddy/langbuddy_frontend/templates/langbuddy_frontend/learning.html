@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nauka języka</title>
+</head>
+<body>
+    <h1>Ćwiczenia językowe</h1>
+
+    <p><b>Tryb nauki:</b> <span id="learningMode">Powtarzanie</span></p>
+    <p><b>Zdanie do powtórzenia / przetłumaczenia:</b> <span id="sentence"></span></p>
+    
+    <button id="startRecord">🎙️ Start</button>
+    <button id="stopRecord" disabled>⏹️ Stop</button>
+    
+    <p><b>Twoja odpowiedź:</b> <span id="transcription"></span></p>
+    <p><b>Ocena odpowiedzi:</b> <span id="score"></span>%</p>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let sentenceId = null;
+        let mode = "repeat"; // Domyślnie tryb powtarzania
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadSentence(); // Wczytaj pierwsze zdanie
+        });
+
+        function loadSentence() {
+            fetch("/get-sentence/")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("sentence").innerText = data.sentence;
+                    sentenceId = data.id;
+                    mode = data.mode;
+                    document.getElementById("learningMode").innerText = mode === "translate" ? "Tłumaczenie" : "Powtarzanie";
+                });
+        }
+
+        document.getElementById("startRecord").addEventListener("click", async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                const formData = new FormData();
+                formData.append("audio", audioBlob);
+                formData.append("sentence_id", sentenceId);
+                formData.append("mode", mode);
+
+                fetch("/upload-audio/", {
+                    method: "POST",
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("transcription").innerText = data.transcription;
+                    document.getElementById("score").innerText = data.score;
+                });
+
+                audioChunks = [];
+            };
+
+            mediaRecorder.start();
+            document.getElementById("startRecord").disabled = true;
+            document.getElementById("stopRecord").disabled = false;
+        });
+
+        document.getElementById("stopRecord").addEventListener("click", () => {
+            mediaRecorder.stop();
+            document.getElementById("startRecord").disabled = false;
+            document.getElementById("stopRecord").disabled = true;
+        });
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 
 
 from .models import Product
@@ -7,7 +7,7 @@ from .serializers import ProductSerializer
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     def perform_create(self, serializer):
         # serializer.save(user=self.request.user)
         print(serializer.validated_data)

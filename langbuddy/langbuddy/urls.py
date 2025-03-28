@@ -19,6 +19,18 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls')),
-    path('api/products/', include('products.urls')),
+    # path('api/', include('api.urls')),
+    # path('api/products/', include('products.urls')),
+    path('api/auth/', include('authorization.urls')),
+    path('api/', include('languages.urls')),
+    path('api/learning/', include('learning.urls')),
+    path('', include('langbuddy_frontend.urls')),
 ]
+
+
+
+# Upewnij się, że obsługujemy pliki statyczne i media
+from django.conf.urls.static import static
+from django.conf import settings
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

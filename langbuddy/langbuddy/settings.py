@@ -37,8 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     'rest_framework',
-    'api',
-    'products',
+
+    'authorization',
+    'languages',
+    'learning',
+    'langbuddy_frontend',
+    # 'profiles',
+    # 'api',
+    # 'products',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +64,9 @@ ROOT_URLCONF = 'langbuddy.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            'langbuddy_frontend/templates/langbuddy_frontend',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,7 +127,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/static/'
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR/ 'media'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
