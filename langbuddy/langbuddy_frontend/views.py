@@ -1,88 +1,3 @@
-# # from django.shortcuts import render
-# # from django.http import JsonResponse
-# # from django.views.decorators.csrf import csrf_exempt
-# # import whisper
-# # import os
-# # from django.conf import settings
-# # from languages.models import Sentence, Translation
-# # from Levenshtein import ratio  # Levenshtein to biblioteka do porównywania tekstów
-# # import g4f
-# # from io import BytesIO
-# # from gtts import gTTS
-
-# # # Funkcja widoku, która obsługuje nagrywanie
-# # def get_record_view(request):
-# #     return render(request, "main.html")
-
-# # @csrf_exempt
-# # def upload_audio(request):
-# #     if request.method == 'POST' and request.FILES.get('audio'):
-# #         plik_audio = request.FILES['audio']
-# #         sciezka_audio = os.path.join("media", plik_audio.name)
-        
-# #         # Zapisujemy plik audio
-# #         with open(sciezka_audio, 'wb') as f:
-# #             for chunk in plik_audio.chunks():
-# #                 f.write(chunk)
-
-# #         # **Transkrypcja audio za pomocą Whisper**
-# #         model = whisper.load_model("base")
-# #         result = model.transcribe(sciezka_audio, language="hr")
-# #         transkrypcja = result['text']
-
-# #         # **Znajdujemy poprawne tłumaczenie z bazy danych**
-# #         correct_translation = Translation.objects.filter(content__icontains=transkrypcja).first()
-
-# #         if correct_translation:
-# #             # **Porównanie transkrypcji z tłumaczeniem za pomocą Levenshteina**
-# #             lev_score = ratio(transkrypcja.lower(), correct_translation.content.lower()) * 100
-
-# #             if lev_score > 80:
-# #                 # **Tłumaczenie uznane za poprawne**
-# #                 response = {
-# #                     'transkrypcja': transkrypcja,
-# #                     'result': 'Poprawne tłumaczenie',
-# #                     'levenshtein_score': lev_score,
-# #                 }
-# #             elif lev_score >= 50:
-# #                 # **Sugestia poprawy tłumaczenia**
-# #                 response = {
-# #                     'transkrypcja': transkrypcja,
-# #                     'result': 'Tłumaczenie wymaga poprawy',
-# #                     'levenshtein_score': lev_score,
-# #                 }
-# #             else:
-# #                 # **Wysyłamy do GPT-4 w celu sprawdzenia sensowności**
-# #                 messages = [
-# #                     {"role": "system", "content": "Sprawdź, czy to tłumaczenie ma sens. Oceń poprawność tłumaczenia."},
-# #                     {"role": "user", "content": transkrypcja}
-# #                 ]
-
-# #                 odpowiedz_ai = g4f.ChatCompletion.create(
-# #                     model="gpt-4",
-# #                     messages=messages,
-# #                     max_tokens=100
-# #                 )
-
-# #                 response = {
-# #                     'transkrypcja': transkrypcja,
-# #                     'result': 'Tłumaczenie niepoprawne, wysyłam do GPT',
-# #                     'levenshtein_score': lev_score,
-# #                     'gpt_response': odpowiedz_ai['choices'][0]['message']['content']
-# #                 }
-
-# #         else:
-# #             # Jeśli nie znaleziono poprawnego tłumaczenia w bazie
-# #             response = {
-# #                 'error': 'Nie znaleziono poprawnego tłumaczenia w bazie danych.',
-# #             }
-
-# #         return JsonResponse(response)
-    
-# #     return JsonResponse({'error': 'Błędne żądanie'}, status=400)
-
-
-
 # from django.shortcuts import render
 # from django.http import JsonResponse
 # from django.views.decorators.csrf import csrf_exempt
@@ -212,7 +127,6 @@ def upload_audio(request):
         model = whisper.load_model("base")
         result = model.transcribe(file_path, language="hr")
         transcription = result['text'].strip()
-        print(transcription)
 
         # 3️⃣ Pobranie trybu nauki i zdania
         mode = request.POST.get('mode', 'repeat')  # Domyślnie tryb powtarzania
@@ -301,3 +215,40 @@ def get_sentence(request):
         'mode': mode,
         'correct_translation': translation.content if translation else None
     })
+
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import whisper
+import os
+from django.conf import settings
+from languages.models import Translation
+
+from io import BytesIO
+from gtts import gTTS
+
+def repeat(request):
+    
+    translation = Translation.objects.all().first().content
+    tts = gTTS(text=translation, lang="hr")
+    audio_path = os.path.join(settings.MEDIA_ROOT, "response.mp3")
+    tts_io = BytesIO()
+    tts.write_to_fp(tts_io)
+    tts_io.seek(0)
+
+    with open(audio_path, "wb") as f:
+            f.write(tts_io.read())
+
+    audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
+
+    return JsonResponse({
+            'audio_url': audio_url  
+        })
+
+from django.shortcuts import render  
+from django.http import JsonResponse     
+
+def repeat_view(request):
+
+    return render(request, 'repeat.html')

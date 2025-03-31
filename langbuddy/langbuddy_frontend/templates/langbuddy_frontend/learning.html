@@ -41,7 +41,7 @@
         document.getElementById("startRecord").addEventListener("click", async () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
-
+            
             mediaRecorder.ondataavailable = event => {
                 audioChunks.push(event.data);
             };
@@ -52,17 +52,14 @@
                 formData.append("audio", audioBlob);
                 formData.append("sentence_id", sentenceId);
                 formData.append("mode", mode);
-
-                fetch("/upload-audio/", {
+                
+                let response = await fetch("/upload-audio/", {
                     method: "POST",
                     body: formData,
                 })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById("transcription").innerText = data.transcription;
-                    document.getElementById("score").innerText = data.score;
-                });
+                let data = await response.json();
 
+                document.getElementById("transcription").textContent = data.transcription || "Błąd transkrypcji";
                 audioChunks = [];
             };
 
