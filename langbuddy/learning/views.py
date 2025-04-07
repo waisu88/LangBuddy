@@ -129,48 +129,138 @@ class EvaluateTranslationView(APIView):
         except Sentence.DoesNotExist:
             return Response({'error': 'Nie znaleziono zdania'}, status=404)
 
-from django.shortcuts import render  
-from django.http import JsonResponse     
 
-def exercise_view(request):
-    mode = request.GET.get('mode', 'repeat')
-    sentence = get_next_sentence(request.user, mode)
-    if not sentence:
-        return JsonResponse({'error': 'Brak dostępnych zdań'})
-    print(mode, sentence)
+
+
+
+
+"""
+Widoki budowane samemu
+
+"""
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+import os
+from django.conf import settings
+from languages.models import Translation
+
+from io import BytesIO
+from gtts import gTTS
+
+def repeat(request):
+    #TODO Tutaj trzeba będzie wymyśleć logikę dla pobierania zdań w zależności od poziomu użytkownika
+    translation = Translation.objects.all().first().content
+    tts = gTTS(text=translation, lang="hr")
+    audio_path = os.path.join(settings.MEDIA_ROOT, "response.mp3")
+    tts_io = BytesIO()
+    tts.write_to_fp(tts_io)
+    tts_io.seek(0)
+
+    with open(audio_path, "wb") as f:
+            f.write(tts_io.read())
+
+    audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
+
     context = {
-        'mode': mode,
-        'sentence': sentence.content
+            'audio_url': audio_url,
+            'mode': 'repeat'
+        }
+    return JsonResponse(context)
+
+
+
+def translate(request):
+    sentence = Sentence.objects.order_by("?").first()
+    # translation = sentence.translations.order_by("?").first()
+    context = {
+        "sentence": sentence.content,
+        # "translation": translation.content,
+        "mode": "translate"
     }
-    return render(request, 'exercise.html', context)
+    return JsonResponse(context)
 
-from django.db.models import Q
 
-def get_next_sentence(user, mode):
-    user_progress = UserProgress.objects.filter(user=user)
-    learning_sessions = LearningSession.objects.filter(user=user)
+import os
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from difflib import SequenceMatcher
+from learning.models import LearningSession, UserProgress
+from languages.models import Sentence, Translation
+# import whisper
+from .whisper_model import model as whisper_model
 
-    # Odrzuć zdania, które użytkownik już zna
-    known_sentence_ids = learning_sessions.filter(is_correct=True).values_list('sentence_id', flat=True)
-    print(mode)
-    # Dostosowanie do trybu nauki
-    if mode == 'repeat':
-        sentences = Sentence.objects.all()
-        # sentences = Sentence.objects.filter(
-        #     language__code=user.profile.target_language,
-        #     level=user.profile.target_language_level
-        # ).exclude(id__in=known_sentence_ids).order_by('?')
-    elif mode == 'translate':
-        sentences = Sentence.objects.filter(
-            language__code='pl'
-        ).exclude(id__in=known_sentence_ids).order_by('?')
-    else:
-        return None
 
-    # # Priorytet dla trudniejszych zdań
-    # if sentences.exists():
-    #     sentences = sentences.order_by('-learning_session__similarity_score')
-    for sentence in sentences:
-        print(sentence)
-    return sentences.first()
 
+@csrf_exempt
+def upload_audio(request):
+    if request.method == 'POST' and request.FILES.get('audio'):
+        # 1️⃣ Pobranie pliku audio
+        audio_file = request.FILES['audio']
+        file_path = os.path.join("media", audio_file.name)
+
+        # Zapisujemy plik
+        with open(file_path, 'wb') as f:
+            for chunk in audio_file.chunks():
+                f.write(chunk)
+
+        # 2️⃣ Transkrypcja za pomocą Whisper
+        
+        result = whisper_model.transcribe(file_path, language="hr")
+        transcription = result['text'].strip()
+        print(transcription)
+        # 3️⃣ Pobranie trybu nauki i zdania
+        mode = request.POST.get('mode', 'repeat')  # Domyślnie tryb powtarzania
+        sentence_id = request.POST.get('sentence_id')
+        sentence = Sentence.objects.filter(id=sentence_id).first()
+
+        # if not sentence:
+        #     return JsonResponse({'error': 'Nie znaleziono zdania w bazie danych.'})
+
+        user = request.user
+        correct_translation = Translation.objects.filter(sentence=sentence, language__code='hr').first()
+
+        # if mode == "repeat":
+        #     score = calculate_similarity(sentence.content, transcription)
+        # elif mode == "translate" and correct_translation:
+        #     score = calculate_similarity(correct_translation.content, transcription)
+        # else:
+        #     score = 0  # Dla trybu rozmowy możemy dodać inne kryteria oceny
+        score = 0
+        # 4️⃣ Zapis sesji nauki
+        # LearningSession.objects.create(
+        #     user=user,
+        #     sentence=sentence,
+        #     user_translation=transcription,
+        #     correct_translation=correct_translation if mode == "translate" else None,
+        #     is_correct=score > 80,  # Poprawne, jeśli wynik >= 80%
+        #     similarity_score=score
+        # )
+
+        # 5️⃣ Aktualizacja poziomu trudności użytkownika
+        # update_user_progress(user, sentence.language, score)
+
+        return JsonResponse({'transkrypcja': transcription, 'score': score})
+
+    return JsonResponse({'error': 'Niepoprawne zapytanie'})
+
+
+def calculate_similarity(original, user_input):
+    return SequenceMatcher(None, original.lower(), user_input.lower()).ratio() * 100
+
+def update_user_progress(user, language, score):
+    progress, _ = UserProgress.objects.get_or_create(user=user, language=language)
+
+    progress.attempts += 1
+    if score > 80:
+        progress.score += 1
+
+    # Zmiana poziomu trudności co 10 poprawnych odpowiedzi
+    levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    if progress.score % 10 == 0:
+        current_index = levels.index(progress.level)
+        if current_index < len(levels) - 1:
+            progress.level = levels[current_index + 1]
+
+    progress.save()

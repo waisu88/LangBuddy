@@ -1,0 +1,32 @@
+{% extends 'langbuddy_main.html' %}
+
+{% block title %}
+Repeat
+{% endblock title %}
+
+
+{% block content_start_audio %}
+<audio id="audioPlayer" controls></audio>
+<script>
+    async function fetchAudio() {
+        try {
+            let response = await fetch("http://127.0.0.1:8000/api/learning/repeat/", {
+                method: "GET"
+            });
+
+            let data = await response.json();
+            console.log(data);
+
+            if (data.audio_url) {
+                let audioPlayer = document.getElementById("audioPlayer");
+                audioPlayer.src = data.audio_url;
+                audioPlayer.play();  // Automatyczne odtworzenie
+            }
+        } catch (error) {
+            console.error("Błąd podczas pobierania pliku audio:", error);
+        }
+    }
+
+    fetchAudio(); // Wywołanie funkcji
+</script>
+{% endblock content_start_audio %}

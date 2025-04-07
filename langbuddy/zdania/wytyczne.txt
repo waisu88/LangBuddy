@@ -1,0 +1,33 @@
+Zainteresowania i hobby: Tematy dotyczące ulubionych zajęć, pasji i sposobów spędzania wolnego czasu.
+
+Relacje i społeczeństwo: Dyskusje na temat przyjaźni, miłości, wartości rodzinnych oraz interakcji społecznych.
+
+Podróże i kultura: Rozmowy o doświadczeniach z podróży, różnicach kulturowych i tradycjach różnych krajów.
+
+Technologia i media społecznościowe: Wpływ nowoczesnych technologii na życie codzienne oraz rola mediów społecznościowych.
+
+Edukacja i kariera: Tematy związane z systemem edukacji, wyborami zawodowymi i rozwojem kariery.
+
+Środowisko i ekologia: Dyskusje na temat zmian klimatycznych, ochrony środowiska i zrównoważonego rozwoju.
+
+Zdrowie i styl życia: Rozmowy o zdrowym trybie życia, diecie, ćwiczeniach i samopoczuciu.
+
+Aktualności i polityka: Debaty dotyczące bieżących wydarzeń, polityki krajowej i międzynarodowej.
+
+Sztuka i rozrywka: Tematy związane z muzyką, filmem, literaturą i innymi formami sztuki.
+
+Filozofia i etyka: Dyskusje na temat moralności, wartości życiowych i pytań egzystencjalnych.
+
+Stwórz mi proszę dane do wczytania według moich wytycznych:
+Format taki jak tutaj (zdanie po polsku, tłumaczenie na chorwacki, poziom w zakresie A1-C2):
+data = [
+    # 🔸 Poziom A1 (Początkujący)
+    ("Lubię słuchać muzyki.", "Volim slušati glazbu.", "A1"),
+    ("Mój ulubiony artysta to Pablo Picasso.", "Moj omiljeni umjetnik je Pablo Picasso.", "A1"),
+    ("Często chodzę do muzeum.", "Često idem u muzej.", "A1"),
+
+ale przerób to na JSON
+
+Kategoria tematyczna: Zainteresowania i hobby: Tematy dotyczące ulubionych zajęć, pasji i sposobów spędzania wolnego czasu.
+
+Stwórz mi proszę 50 zdań dla poziomu A1. 

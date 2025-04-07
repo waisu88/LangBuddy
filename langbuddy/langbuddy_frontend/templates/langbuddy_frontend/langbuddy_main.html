@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Langbuddy{% endblock title %}</title>
+</head>
+<body>
+    {% block content_start_audio %}
+    {% endblock content_start_audio %}
+    <button id="startRecord">Start</button>
+    <button id="stopRecord" disabled>Stop</button>
+
+    <p><b>Twoja transkrypcja:</b> <span id="transkrypcja"></span></p>
+    <script>
+        let mediaRecorder;
+        let audioChunks;
+
+        // Rozpoczęcie nagrywania
+        document.getElementById("startRecord").addEventListener("click", async () => {
+            let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];  // Resetujemy nagranie, aby nie dodawało do poprzedniego
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                let audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                let formData = new FormData();
+                formData.append("audio", audioBlob, "nagranie.wav");
+
+                // Wysyłanie pliku audio na serwer
+                let response = await fetch("http://127.0.0.1:8000/api/learning/upload_audio/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                let data = await response.json();
+                console.log("Odpowiedź z serwera:", data)
+ 
+                // Wyświetlanie transkrypcji i odpowiedzi AI
+                document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
+                document.getElementById("translation").textContent = data.translation || "Brak odpowiedzi od AI";
+                document.getElementById("lev_score").textContent = data.levenshtein_score || "Brak odpowiedzi od AI";
+
+                // Odtwarzanie wygenerowanego pliku audio
+                if (data.audio_url) {
+                    let audioPlayer = document.getElementById("audioPlayer");
+                    audioPlayer.src = data.audio_url;
+                    audioPlayer.play();  // Automatyczne odtworzenie
+                }
+            };
+
+            mediaRecorder.start();
+            document.getElementById("startRecord").disabled = true;
+            document.getElementById("stopRecord").disabled = false;
+        });
+
+        // Zatrzymanie nagrywania
+        document.getElementById("stopRecord").addEventListener("click", () => {
+            mediaRecorder.stop();
+            document.getElementById("startRecord").disabled = false;
+            document.getElementById("stopRecord").disabled = true;
+        });
+    </script>
+</body>
+</html>

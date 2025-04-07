@@ -11,7 +11,7 @@ class SentenceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sentence
-        fields = ['content', 'language', 'level', 'created_at']
+        fields = ['content', 'language', 'category', 'level', 'created_at']
 
 class TranslationSerializer(serializers.ModelSerializer):
     sentence = serializers.PrimaryKeyRelatedField(queryset=Sentence.objects.all())

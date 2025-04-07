@@ -216,39 +216,11 @@ def get_sentence(request):
         'correct_translation': translation.content if translation else None
     })
 
-
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import whisper
-import os
-from django.conf import settings
-from languages.models import Translation
-
-from io import BytesIO
-from gtts import gTTS
-
-def repeat(request):
-    
-    translation = Translation.objects.all().first().content
-    tts = gTTS(text=translation, lang="hr")
-    audio_path = os.path.join(settings.MEDIA_ROOT, "response.mp3")
-    tts_io = BytesIO()
-    tts.write_to_fp(tts_io)
-    tts_io.seek(0)
-
-    with open(audio_path, "wb") as f:
-            f.write(tts_io.read())
-
-    audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
-
-    return JsonResponse({
-            'audio_url': audio_url  
-        })
-
-from django.shortcuts import render  
-from django.http import JsonResponse     
+from django.shortcuts import render   
 
 def repeat_view(request):
+    return render(request, 'langbuddy_repeat.html')
 
-    return render(request, 'repeat.html')
+
+def translate_view(request):
+    return render(request, 'langbuddy_translate.html')

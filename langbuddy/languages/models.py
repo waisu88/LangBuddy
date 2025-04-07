@@ -7,11 +7,19 @@ class Language(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+    
+
+class Category(models.Model):
+    name = models.CharField(max_length=255, unique=True)  # Nazwa kategorii
+
+    def __str__(self):
+        return self.name
 
 
 class Sentence(models.Model):
     content = models.TextField()  # Treść zdania
-    language = models.ForeignKey(Language, on_delete=models.CASCADE)  # Język źródłowy
+    language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)  # Język źródłowy
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     level = models.CharField(
         max_length=2,
         choices=[
@@ -28,10 +36,10 @@ class Sentence(models.Model):
     
 
 class Translation(models.Model):
-    sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='translations')
-    language = models.ForeignKey(Language, on_delete=models.CASCADE)  # Język docelowy
+    sentence = models.ForeignKey(Sentence, on_delete=models.DO_NOTHING, related_name='translations')
+    language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)  # Język docelowy
     content = models.TextField()  # Przetłumaczone zdanie
-    is_verified = models.BooleanField(default=False)  # Czy tłumaczenie zostało zweryfikowane
+    is_verified = models.BooleanField(default=True)  # Czy tłumaczenie zostało zweryfikowane
 
     def __str__(self):
         return f"{self.content[:50]}... ({self.language.code})"
