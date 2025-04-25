@@ -108,7 +108,7 @@ import whisper
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from difflib import SequenceMatcher
-from learning.models import LearningSession, UserProgress
+from learning.models import UserProgress
 from languages.models import Sentence, Translation
 
 @csrf_exempt

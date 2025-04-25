@@ -1,0 +1,16 @@
+{
+    "category": "Aktualności i polityka",
+    "level": "C2",
+    "sentences": [
+        {"pl": "Jakie są najbardziej skomplikowane dylematy etyczne współczesnej polityki?", "hr": "Koji su najsloženiji etički dilemmi suvremene politike?"},
+        {"pl": "W jaki sposób dezinformacja może podważyć fundamenty demokracji?", "hr": "Kako dezinformacije mogu potkopati temelje demokracije?"},
+        {"pl": "Czy demokracja liberalna jest systemem, który ma przyszłość?", "hr": "Ima li liberalna demokracija budućnost?"},
+        {"pl": "Jak globalne elity polityczne wpływają na kierunek rozwoju świata?", "hr": "Kako globalne političke elite utječu na smjer razvoja svijeta?"},
+        {"pl": "Czy istnieje uniwersalny model dobrego rządzenia, czy każda kultura definiuje go inaczej?", "hr": "Postoji li univerzalni model dobrog upravljanja ili ga svaka kultura definira drugačije?"},
+        {"pl": "Jakie mechanizmy mogą skutecznie ograniczyć nadużycia władzy?", "hr": "Koji mehanizmi mogu učinkovito ograničiti zlouporabu vlasti?"},
+        {"pl": "Czy władza powinna być ograniczana czasowo, aby zapobiec autorytaryzmowi?", "hr": "Treba li vlast biti vremenski ograničena kako bi se spriječio autoritarizam?"},
+        {"pl": "Jakie są najważniejsze lekcje historyczne dotyczące upadku demokracji?", "hr": "Koje su najvažnije povijesne lekcije o padu demokracije?"},
+        {"pl": "Czy można uzasadnić stosowanie cenzury w wyjątkowych przypadkach?", "hr": "Može li se opravdati korištenje cenzure u iznimnim slučajevima?"},
+        {"pl": "Jakie wyzwania dla demokracji niesie ze sobą rozwój sztucznej inteligencji?", "hr": "Koje izazove za demokraciju donosi razvoj umjetne inteligencije?"}
+    ]
+}

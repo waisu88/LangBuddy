@@ -3,3 +3,33 @@
 {% block title %}
 Translating
 {% endblock title %}
+
+{% block content_show_sentence %}
+<p><b>Przetłumacz:</b> <span id="zdanie"></span></p>
+<script>
+  
+    async function fetchSentence() {
+        try {
+            let response = await fetch("http://127.0.0.1:8000/api/learning/translate/", {
+                method: "GET"
+            });
+
+            let data = await response.json();
+            
+
+            if (data && data.sentence) {
+            let sentenceContent = document.getElementById("zdanie");
+            sentenceContent.textContent = data.sentence.content || "Brak zdania do tłumaczenia";
+            
+            // Zapisz ID zdania globalnie
+            window.currentSentenceId = data.sentence.id;
+        }
+        } catch (error) {
+            console.error("Błąd podczas pobierania zdania do tłumaczenia:", error);
+        }
+    } 
+
+    fetchSentence(); // Wywołanie funkcji
+
+</script>
+{% endblock content_show_sentence %}

@@ -8,10 +8,15 @@
 <body>
     {% block content_start_audio %}
     {% endblock content_start_audio %}
+    {% block content_show_sentence %}
+    {% endblock content_show_sentence %}
     <button id="startRecord">Start</button>
     <button id="stopRecord" disabled>Stop</button>
 
     <p><b>Twoja transkrypcja:</b> <span id="transkrypcja"></span></p>
+    <p><b>Tłumaczenie:</b> <span id="translation"></span></p>
+    <p><b>Dokładność:</b> <span id="lev_score"></span></p>
+    
     <script>
         let mediaRecorder;
         let audioChunks;
@@ -30,9 +35,11 @@
                 let audioBlob = new Blob(audioChunks, { type: "audio/wav" });
                 let formData = new FormData();
                 formData.append("audio", audioBlob, "nagranie.wav");
-
+                if (window.currentSentenceId) {
+                    formData.append("sentence_id", window.currentSentenceId);
+                }
                 // Wysyłanie pliku audio na serwer
-                let response = await fetch("http://127.0.0.1:8000/api/learning/upload_audio/", {
+                let response = await fetch("http://127.0.0.1:8000/api/learning/check_answer/", {
                     method: "POST",
                     body: formData
                 });
