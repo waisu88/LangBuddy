@@ -16,7 +16,7 @@
     <p><b>Twoja transkrypcja:</b> <span id="transkrypcja"></span></p>
     <p><b>Tłumaczenie:</b> <span id="translation"></span></p>
     <p><b>Dokładność:</b> <span id="lev_score"></span></p>
-    
+    <button id="nextButton" style="display:none;">Next</button>
     <script>
         let mediaRecorder;
         let audioChunks;
@@ -51,13 +51,14 @@
                 document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
                 document.getElementById("translation").textContent = data.translation || "Brak odpowiedzi od AI";
                 document.getElementById("lev_score").textContent = data.levenshtein_score || "Brak odpowiedzi od AI";
-
+                
+                document.getElementById("nextButton").style.display = "block";
                 // Odtwarzanie wygenerowanego pliku audio
-                if (data.audio_url) {
-                    let audioPlayer = document.getElementById("audioPlayer");
-                    audioPlayer.src = data.audio_url;
-                    audioPlayer.play();  // Automatyczne odtworzenie
-                }
+                // if (data.audio_url) {
+                //     let audioPlayer = document.getElementById("audioPlayer");
+                //     audioPlayer.src = data.audio_url;
+                //     audioPlayer.play();  // Automatyczne odtworzenie
+                // }
             };
 
             mediaRecorder.start();
@@ -70,6 +71,10 @@
             mediaRecorder.stop();
             document.getElementById("startRecord").disabled = false;
             document.getElementById("stopRecord").disabled = true;
+        });
+
+        document.getElementById("nextButton").addEventListener("click", () => {
+            location.reload();  // Odśwież stronę
         });
     </script>
 </body>

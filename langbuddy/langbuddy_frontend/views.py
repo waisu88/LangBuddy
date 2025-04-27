@@ -224,3 +224,7 @@ def repeat_view(request):
 
 def translate_view(request):
     return render(request, 'langbuddy_translate.html')
+
+
+def choose_categories_view(request):
+    return render(request, 'choose_categories.html')

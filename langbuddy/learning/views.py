@@ -132,7 +132,7 @@ def get_random_sentence(language, level):
 
 
 
-
+"""Widoki funkcji zamienione poniżej na klas oraz DRF"""
 
 """
 Widoki budowane samemu
@@ -145,7 +145,7 @@ def choose_sentence(user, mode="repeat"):
     # 1. Sprawdzenie globalnego poziomu użytkownika
     user_progress = UserProgress.objects.filter(user=user).first()
     level = user_progress.global_level if user_progress else 'B1'
-    level = "A1"
+
 
     # 2. Sprawdzenie preferowanych kategorii użytkownika
     preferred_categories = UserCategoryPreference.objects.filter(
@@ -274,11 +274,9 @@ from .whisper_model import model as whisper_model
 @csrf_exempt
 def check_answer(request):
     if request.method == 'POST' and request.FILES.get('audio'):
-        print("1.Jest audio")
+
         # ⬇️ Transkrybujemy audio przez osobną funkcję
         transcription = upload_audio(request)
-        print("3. Jest transkrypcja")
-        print(transcription)
         
         # Pobranie trybu nauki i zdania
         sentence_id = request.POST.get('sentence_id')
@@ -292,11 +290,10 @@ def check_answer(request):
         
         translation = sentence.translations.filter(language__code="hr").first().content
 
-        print("4. Przed liczeniem score")
         score = calculate_similarity(transcription, translation)
 
         # Tu możesz też np. zaktualizować UserSentenceProgress
-        print("5. Po liczeniu score")
+     
         return JsonResponse({
             'transkrypcja': transcription,
             'sentence': sentence.content,
@@ -321,7 +318,6 @@ def upload_audio(request):
 
 
 def transcribe_audio(file_path):
-    print("2.Jest plik")
     result = whisper_model.transcribe(file_path, language="hr")
     transcription = result['text'].strip()
     return transcription
@@ -348,6 +344,164 @@ def update_user_progress(user, language, score):
             progress.level = levels[current_index + 1]
 
     progress.save()
+
+
+# from django.db.models import Q, F, OuterRef, Subquery, IntegerField, Value as V
+# from django.db.models.functions import Coalesce
+
+# def choose_sentence(user, mode="repeat"):
+#     # 1. Sprawdzenie globalnego poziomu użytkownika
+#     user_progress = UserProgress.objects.filter(user=user).first()
+#     level = user_progress.global_level if user_progress else 'B1'
+
+
+#     # 2. Sprawdzenie preferowanych kategorii użytkownika
+#     preferred_categories = UserCategoryPreference.objects.filter(
+#         user=user,
+#         is_active=True
+#     ).values_list('category_id', flat=True)
+    
+
+
+#     # 3. Wybór zdań pasujących do poziomu użytkownika oraz wybranych kategorii
+    
+#     # TODO Tutaj możnaby dodać miejsce do zapamiętania kategorii, żeby następne 
+#     # zdanie w danej sesji było z tej samej kategorii o ile się nie wyczerpały
+    
+#     if not preferred_categories:
+#         base_sentences = Sentence.objects.all()
+#     else:
+#         base_sentences = Sentence.objects.filter(
+#             level=level,
+#             category_id__in=preferred_categories
+#         )
+
+#     user_progress_subquery = UserSentenceProgress.objects.filter(
+#         user=user,
+#         sentence=OuterRef('pk'),
+#         is_mastered=False  # <-- wyklucz opanowane
+#     )
+
+#     # 5. Annotacja liczby prób — domyślnie 0
+#     if mode == "repeat":
+#         annotated = base_sentences.annotate(
+#             attempts=Coalesce(Subquery(user_progress_subquery.values('repeat_attempts')[:1]), V(0), output_field=IntegerField())
+#         )
+#     elif mode == "translate":
+#         annotated = base_sentences.annotate(
+#             attempts=Coalesce(Subquery(user_progress_subquery.values('translate_attempts')[:1]), V(0), output_field=IntegerField())
+#         )
+#     else:
+#         annotated = base_sentences.annotate(
+#             attempts=V(0, output_field=IntegerField())
+#         )
+
+#     # 6. Posortuj po liczbie prób rosnąco, a w razie remisu losowo
+#     sentence = annotated.order_by('attempts', '?').first()
+#     return sentence
+
+
+
+
+
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework import status
+# from .models import Sentence
+# from languages.serializers import SentenceSerializer
+# from .whisper_model import model as whisper_model
+# from .utils import calculate_similarity
+# # choose_sentence  # przenieśmy to dla porządku do utils.py
+# from django.conf import settings
+# import os
+# from gtts import gTTS
+# from io import BytesIO
+
+# class RepeatAPIView(APIView):
+#     def get(self, request):
+#         user = request.user
+#         sentence = choose_sentence(user=user, mode="repeat")
+#         if not sentence:
+#             return Response({'error': 'Brak dostępnych zdań'}, status=status.HTTP_404_NOT_FOUND)
+
+#         translation = sentence.translations.filter(language__code="hr").first()
+#         if not translation:
+#             return Response({'error': 'Brak tłumaczenia'}, status=status.HTTP_404_NOT_FOUND)
+
+#         tts = gTTS(text=translation.content, lang="hr")
+#         tts_io = BytesIO()
+#         tts.write_to_fp(tts_io)
+#         tts_io.seek(0)
+
+#         audio_path = os.path.join(settings.MEDIA_ROOT, "response.mp3")
+#         with open(audio_path, "wb") as f:
+#             f.write(tts_io.read())
+
+#         audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
+
+#         return Response({
+#             'mode': 'repeat',
+#             'audio_url': audio_url,
+#             'sentence': SentenceSerializer(sentence).data
+#         })
+
+# class TranslateAPIView(APIView):
+#     def get(self, request):
+#         user = request.user
+#         sentence = choose_sentence(user=user, mode="translate")
+#         if not sentence:
+#             return Response({'error': 'Brak dostępnych zdań'}, status=status.HTTP_404_NOT_FOUND)
+
+#         return Response({
+#             'mode': 'translate',
+#             'sentence': SentenceSerializer(sentence).data
+#         })
+
+# class CheckAnswerAPIView(APIView):
+#     def post(self, request):
+#         if 'audio' not in request.FILES:
+#             return Response({'error': 'Brak pliku audio'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         transcription = self.upload_audio(request)
+
+#         sentence_id = request.data.get('sentence_id')
+#         if not sentence_id:
+#             return Response({'error': 'Brak ID zdania'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         try:
+#             sentence = Sentence.objects.get(id=sentence_id)
+#         except Sentence.DoesNotExist:
+#             return Response({'error': 'Nie znaleziono zdania'}, status=status.HTTP_404_NOT_FOUND)
+
+#         translation = sentence.translations.filter(language__code="hr").first()
+#         if not translation:
+#             return Response({'error': 'Brak tłumaczenia'}, status=status.HTTP_404_NOT_FOUND)
+
+#         score = calculate_similarity(transcription, translation.content)
+
+#         return Response({
+#             'transkrypcja': transcription,
+#             'sentence': sentence.content,
+#             'translation': translation.content,
+#             'levenshtein_score': score
+#         })
+
+#     def upload_audio(self, request):
+#         audio_file = request.FILES['audio']
+#         file_path = os.path.join(settings.MEDIA_ROOT, audio_file.name)
+
+#         with open(file_path, 'wb') as f:
+#             for chunk in audio_file.chunks():
+#                 f.write(chunk)
+
+#         return self.transcribe_audio(file_path)
+
+#     def transcribe_audio(self, file_path):
+#         result = whisper_model.transcribe(file_path, language="hr")
+#         transcription = result['text'].strip()
+#         return transcription
+
+
 
 
 

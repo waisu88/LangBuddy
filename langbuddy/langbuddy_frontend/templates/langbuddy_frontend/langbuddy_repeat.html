@@ -6,6 +6,7 @@ Repeat
 
 
 {% block content_start_audio %}
+<p><b>Powtórz tłumaczenie zdania:</b> <span id="zdanie"></span></p>
 <audio id="audioPlayer" controls></audio>
 <script>
     async function fetchAudio() {
@@ -15,7 +16,12 @@ Repeat
             });
 
             let data = await response.json();
-            console.log(data);
+            if (data && data.sentence) {
+            let sentenceContent = document.getElementById("zdanie");
+            sentenceContent.textContent = data.sentence.content || "Brak zdania do tłumaczenia";
+            
+            window.currentSentenceId = data.sentence.id;
+            }
 
             if (data.audio_url) {
                 let audioPlayer = document.getElementById("audioPlayer");

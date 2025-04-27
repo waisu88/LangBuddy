@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Language, Sentence, Translation
+from .models import Language, Sentence, Translation, Category
 
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,3 +20,9 @@ class TranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Translation
         fields = ['sentence', 'language', 'content', 'is_verified']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']

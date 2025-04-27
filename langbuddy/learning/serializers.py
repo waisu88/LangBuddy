@@ -25,3 +25,5 @@ class UserSentenceProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSentenceProgress
         fields = "__all__"
+
+
