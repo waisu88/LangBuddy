@@ -1,8 +1,10 @@
 from django.urls import path
 from .views import (UserProgressAPIView, 
-                    UserCategoryPreferenceAPIView, UserCategoryProgressAPIView, 
+                    UserCategoryPreferenceAPIView, 
+                    user_category_preferences,
                     UserSentenceProgressAPIView,
                     repeat, translate, check_answer)
+# UserCategoryProgressAPIView, 
     # ,
     # RepeatAPIView, TranslateAPIView, CheckAnswerAPIView
 
@@ -16,9 +18,10 @@ urlpatterns = [
     # path('check_answer/', CheckAnswerAPIView.as_view()),
     # path('repeat/', RepeatAPIView.as_view()),
     # path('translate/', TranslateAPIView.as_view()),
-    path('progress/category/', UserCategoryProgressAPIView.as_view()),
+    # path('progress/category/', UserCategoryProgressAPIView.as_view()),
     # path('progress/category/<id>/', UserCategoryProgressAPIView.as_view()),
-    path('preferences/', UserCategoryPreferenceAPIView.as_view()),
+    # path('preferences/', UserCategoryPreferenceAPIView.as_view()),
+    path('preferences/', user_category_preferences),
     path('progress/sentence/', UserSentenceProgressAPIView.as_view()),
     path('progress/', UserProgressAPIView.as_view()),
 ]

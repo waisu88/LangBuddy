@@ -530,3 +530,48 @@ class UserCategoryPreferenceAPIView(generics.ListAPIView):
 class UserSentenceProgressAPIView(generics.ListAPIView):
     serializer_class = UserSentenceProgressSerializer
     queryset = UserSentenceProgress.objects.all()
+
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import UserCategoryPreference
+
+
+
+@csrf_exempt
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def user_category_preferences(request):
+    user = request.user
+
+    if request.method == 'GET':
+        # Zwróć tylko ID aktywnych kategorii użytkownika
+        preferences = UserCategoryPreference.objects.filter(user=user, is_active=True)
+
+        selected_categories = [
+            {
+                "category_id": pref.category.id,
+                "category_name": pref.category.name,
+                "priority": pref.priority
+            }
+            for pref in preferences
+        ]
+
+        return Response(selected_categories)
+    
+    if request.method == 'POST':
+        print("Start")
+        selected_categories = request.data.get('selected_categories', [])
+        print(selected_categories)
+
+        # Dezaktywuj wszystkie stare
+        UserCategoryPreference.objects.filter(user=user).update(is_active=False)
+
+        # Aktywuj wybrane
+        for cat_id in selected_categories:
+            pref, created = UserCategoryPreference.objects.get_or_create(user=user, category_id=cat_id)
+            pref.is_active = True
+            pref.save()
+
+        return Response({"status": "preferences updated"})
