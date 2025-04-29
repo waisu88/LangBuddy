@@ -12,30 +12,51 @@ class UserCategoryPreference(models.Model):
         return f"{self.user.username} - {self.category.name} (priority: {self.priority})"
 
 
+from django.db import models
+from django.contrib.auth.models import User
+from django.db.models import JSONField  # JSONField działa z SQLite od Django 3.1
+from languages.models import Sentence
+
 class UserSentenceProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE)
+
     correct_attempts = models.PositiveIntegerField(default=0)
     total_attempts = models.PositiveIntegerField(default=0)
     repeat_attempts = models.PositiveIntegerField(default=0)
     translate_attempts = models.PositiveIntegerField(default=0)
+
     last_similarity_score = models.FloatField(default=0.0)
+    recent_scores = JSONField(default=list)  # <-- nowość
     is_mastered = models.BooleanField(default=False)
-    last_attempt_at = models.DateTimeField(auto_now=True)  # aktualizuje się automatycznie
+    last_attempt_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('user', 'sentence')  # Jeden rekord dla danego użytkownika i zdania
+        unique_together = ('user', 'sentence')
 
-    def update_progress(self, is_correct, similarity_score):
+    def update_progress(self, similarity_score: float, attempt_type: str = "default"):
         self.total_attempts += 1
-        if is_correct:
-            self.correct_attempts += 1
         self.last_similarity_score = similarity_score
 
-        # np. jeśli 3 razy dobrze z rzędu → oznacz jako opanowane
-        if self.correct_attempts >= 3 and (self.correct_attempts / self.total_attempts) >= 0.8:
+        # Update repeat/translate attempts
+        if attempt_type == "repeat":
+            self.repeat_attempts += 1
+        elif attempt_type == "translate":
+            self.translate_attempts += 1
+
+        # Update recent scores (keep only last 3)
+        scores = self.recent_scores or []
+        scores.append(similarity_score)
+        self.recent_scores = scores[-3:]
+
+        # Master if average of last 3 >= 0.8
+        if len(self.recent_scores) == 3 and sum(self.recent_scores) / 3 >= 0.8:
             self.is_mastered = True
-        
+
+        # (Optional) treat similarity >= 0.8 as correct
+        if similarity_score >= 0.8:
+            self.correct_attempts += 1
+        print(self.__dict__)
         self.save()
 
     def accuracy(self):
@@ -44,7 +65,6 @@ class UserSentenceProgress(models.Model):
     def __str__(self):
         status = "Mastered" if self.is_mastered else "In Progress"
         return f"{self.user.username} - {self.sentence.id} ({status}, {self.accuracy()}%)"
-
 
 class UserCategoryProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

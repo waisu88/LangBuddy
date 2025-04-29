@@ -21,6 +21,7 @@ Repeat
             sentenceContent.textContent = data.sentence.content || "Brak zdania do tłumaczenia";
             
             window.currentSentenceId = data.sentence.id;
+            window.currentMode = data.mode;
             }
 
             if (data.audio_url) {

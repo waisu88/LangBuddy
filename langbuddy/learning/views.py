@@ -138,28 +138,23 @@ def get_random_sentence(language, level):
 Widoki budowane samemu
 
 """
-from django.db.models import Q, F, OuterRef, Subquery, IntegerField, Value as V
+from django.db.models import OuterRef, Subquery, IntegerField, Exists, Value as V
 from django.db.models.functions import Coalesce
+from .models import UserProgress, UserCategoryPreference, UserSentenceProgress
+from languages.models import Sentence
 
 def choose_sentence(user, mode="repeat"):
-    # 1. Sprawdzenie globalnego poziomu użytkownika
+    # 1. Globalny poziom użytkownika
     user_progress = UserProgress.objects.filter(user=user).first()
     level = user_progress.global_level if user_progress else 'B1'
 
-
-    # 2. Sprawdzenie preferowanych kategorii użytkownika
+    # 2. Preferowane kategorie użytkownika
     preferred_categories = UserCategoryPreference.objects.filter(
         user=user,
         is_active=True
     ).values_list('category_id', flat=True)
-    
 
-
-    # 3. Wybór zdań pasujących do poziomu użytkownika oraz wybranych kategorii
-    
-    # TODO Tutaj możnaby dodać miejsce do zapamiętania kategorii, żeby następne 
-    # zdanie w danej sesji było z tej samej kategorii o ile się nie wyczerpały
-    
+    # 3. Bazowy queryset zdań
     if not preferred_categories:
         base_sentences = Sentence.objects.all()
     else:
@@ -168,27 +163,35 @@ def choose_sentence(user, mode="repeat"):
             category_id__in=preferred_categories
         )
 
-    user_progress_subquery = UserSentenceProgress.objects.filter(
+    # 4. Wykluczenie opanowanych zdań (is_mastered=True)
+    mastered_subquery = UserSentenceProgress.objects.filter(
         user=user,
         sentence=OuterRef('pk'),
-        is_mastered=False  # <-- wyklucz opanowane
+        is_mastered=True
+    )
+    base_sentences = base_sentences.annotate(
+        is_mastered=Exists(mastered_subquery)
+    ).filter(is_mastered=False)
+
+    # 5. Annotacja liczby prób
+    if mode == "repeat":
+        progress_subquery = UserSentenceProgress.objects.filter(
+            user=user,
+            sentence=OuterRef('pk')
+        ).values('repeat_attempts')[:1]
+    elif mode == "translate":
+        progress_subquery = UserSentenceProgress.objects.filter(
+            user=user,
+            sentence=OuterRef('pk')
+        ).values('translate_attempts')[:1]
+    else:
+        progress_subquery = UserSentenceProgress.objects.none().values('repeat_attempts')  # fallback
+
+    annotated = base_sentences.annotate(
+        attempts=Coalesce(Subquery(progress_subquery), V(0), output_field=IntegerField())
     )
 
-    # 5. Annotacja liczby prób — domyślnie 0
-    if mode == "repeat":
-        annotated = base_sentences.annotate(
-            attempts=Coalesce(Subquery(user_progress_subquery.values('repeat_attempts')[:1]), V(0), output_field=IntegerField())
-        )
-    elif mode == "translate":
-        annotated = base_sentences.annotate(
-            attempts=Coalesce(Subquery(user_progress_subquery.values('translate_attempts')[:1]), V(0), output_field=IntegerField())
-        )
-    else:
-        annotated = base_sentences.annotate(
-            attempts=V(0, output_field=IntegerField())
-        )
-
-    # 6. Posortuj po liczbie prób rosnąco, a w razie remisu losowo
+    # 6. Sortowanie i wybór zdania
     sentence = annotated.order_by('attempts', '?').first()
     return sentence
 
@@ -274,7 +277,7 @@ from .whisper_model import model as whisper_model
 @csrf_exempt
 def check_answer(request):
     if request.method == 'POST' and request.FILES.get('audio'):
-
+        
         # ⬇️ Transkrybujemy audio przez osobną funkcję
         transcription = upload_audio(request)
         
@@ -293,7 +296,10 @@ def check_answer(request):
         score = calculate_similarity(transcription, translation)
 
         # Tu możesz też np. zaktualizować UserSentenceProgress
-     
+        
+        mode = request.POST.get('mode')
+        update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
+
         return JsonResponse({
             'transkrypcja': transcription,
             'sentence': sentence.content,
@@ -328,6 +334,21 @@ def calculate_similarity(transcription, translation):
     distance = levenshtein(transcription, translation)
     score = (1 - distance / max(len(transcription), len(translation))) * 100
     return score
+
+
+def update_sentence_progress(user, sentence, mode, score):
+    progress, created = UserSentenceProgress.objects.get_or_create(user=user, sentence=sentence)
+    progress.update_progress(similarity_score=score, attempt_type=mode)
+
+    return Response({
+        "status": "updated",
+        "is_mastered": progress.is_mastered,
+        "accuracy": progress.accuracy()
+    })
+
+
+
+
 
 def update_user_progress(user, language, score):
     progress, _ = UserProgress.objects.get_or_create(user=user, language=language)

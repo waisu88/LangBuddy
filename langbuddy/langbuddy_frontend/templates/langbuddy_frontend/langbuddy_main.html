@@ -38,6 +38,10 @@
                 if (window.currentSentenceId) {
                     formData.append("sentence_id", window.currentSentenceId);
                 }
+                if (window.currentMode) {
+                    formData.append("mode", window.currentMode);
+                }
+
                 // Wysyłanie pliku audio na serwer
                 let response = await fetch("http://127.0.0.1:8000/api/learning/check_answer/", {
                     method: "POST",

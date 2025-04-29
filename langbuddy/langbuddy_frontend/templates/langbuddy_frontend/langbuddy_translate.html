@@ -23,6 +23,7 @@ Translating
             
             // Zapisz ID zdania globalnie
             window.currentSentenceId = data.sentence.id;
+            window.currentMode = data.mode;
         }
         } catch (error) {
             console.error("Błąd podczas pobierania zdania do tłumaczenia:", error);
