@@ -1,84 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% load static %}
     <title>{% block title %}Langbuddy{% endblock title %}</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
 </head>
 <body>
-    {% block content_start_audio %}
-    {% endblock content_start_audio %}
-    {% block content_show_sentence %}
-    {% endblock content_show_sentence %}
-    <button id="startRecord">Start</button>
-    <button id="stopRecord" disabled>Stop</button>
+    <div class="container">
+        {% block content_start_audio %}{% endblock content_start_audio %}
+        {% block content_show_sentence %}{% endblock content_show_sentence %}
 
-    <p><b>Twoja transkrypcja:</b> <span id="transkrypcja"></span></p>
-    <p><b>Tłumaczenie:</b> <span id="translation"></span></p>
-    <p><b>Dokładność:</b> <span id="lev_score"></span></p>
-    <button id="nextButton" style="display:none;">Next</button>
+        <button id="recordButton" class="record-btn">Start</button>
+
+        <div id="outputBlock">
+            <div class="transcription">
+                <b>Twoja transkrypcja:</b>
+                <span id="transkrypcja"></span>
+            </div>
+            <div class="translation">
+                <b>Tłumaczenie:</b>
+                <span id="translation"></span>
+            </div>
+            <div class="accuracy">
+                <b>Dokładność:</b>
+                <span id="lev_score"></span>
+            </div>
+        </div>
+
+        <button id="nextButton">Next</button>
+    </div>
+
     <script>
         let mediaRecorder;
         let audioChunks;
+        let isRecording = false;
 
-        // Rozpoczęcie nagrywania
-        document.getElementById("startRecord").addEventListener("click", async () => {
-            let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];  // Resetujemy nagranie, aby nie dodawało do poprzedniego
+        document.getElementById("recordButton").addEventListener("click", async () => {
+            if (isRecording) {
+                mediaRecorder.stop();
+                document.getElementById("recordButton").textContent = "Start";
+            } else {
+                let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
 
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
 
-            mediaRecorder.onstop = async () => {
-                let audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-                let formData = new FormData();
-                formData.append("audio", audioBlob, "nagranie.wav");
-                if (window.currentSentenceId) {
-                    formData.append("sentence_id", window.currentSentenceId);
-                }
-                if (window.currentMode) {
-                    formData.append("mode", window.currentMode);
-                }
+                mediaRecorder.onstop = async () => {
+                    let audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                    let formData = new FormData();
+                    formData.append("audio", audioBlob, "nagranie.wav");
+                    document.getElementById("recordButton").textContent = "Przetwarzanie";
+                    document.getElementById("recordButton").disabled = true; 
 
-                // Wysyłanie pliku audio na serwer
-                let response = await fetch("http://127.0.0.1:8000/api/learning/check_answer/", {
-                    method: "POST",
-                    body: formData
-                });
+                    if (window.currentSentenceId) formData.append("sentence_id", window.currentSentenceId);
+                    if (window.currentMode) formData.append("mode", window.currentMode);
 
-                let data = await response.json();
-                console.log("Odpowiedź z serwera:", data)
- 
-                // Wyświetlanie transkrypcji i odpowiedzi AI
-                document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
-                document.getElementById("translation").textContent = data.translation || "Brak odpowiedzi od AI";
-                document.getElementById("lev_score").textContent = data.levenshtein_score || "Brak odpowiedzi od AI";
-                
-                document.getElementById("nextButton").style.display = "block";
-                // Odtwarzanie wygenerowanego pliku audio
-                // if (data.audio_url) {
-                //     let audioPlayer = document.getElementById("audioPlayer");
-                //     audioPlayer.src = data.audio_url;
-                //     audioPlayer.play();  // Automatyczne odtworzenie
-                // }
-            };
+                    let response = await fetch("http://127.0.0.1:8000/api/learning/check_answer/", {
+                        method: "POST",
+                        body: formData,
+                    });
 
-            mediaRecorder.start();
-            document.getElementById("startRecord").disabled = true;
-            document.getElementById("stopRecord").disabled = false;
-        });
+                    let data = await response.json();
+                    console.log("Odpowiedź z serwera:", data);
 
-        // Zatrzymanie nagrywania
-        document.getElementById("stopRecord").addEventListener("click", () => {
-            mediaRecorder.stop();
-            document.getElementById("startRecord").disabled = false;
-            document.getElementById("stopRecord").disabled = true;
+                    document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
+                    document.getElementById("translation").textContent = data.translation || "Brak tłumaczenia";
+                    document.getElementById("lev_score").textContent = data.levenshtein_score || "Brak wyniku";
+
+                    document.getElementById("recordButton").textContent = "Start";  // Zmieniamy tekst na "Start"
+                    document.getElementById("recordButton").disabled = false;
+
+                    document.getElementById("nextButton").style.display = "block";
+                };
+
+                mediaRecorder.start();
+                document.getElementById("recordButton").textContent = "Stop";
+            }
+
+            isRecording = !isRecording;
         });
 
         document.getElementById("nextButton").addEventListener("click", () => {
-            location.reload();  // Odśwież stronę
+            location.reload();
         });
     </script>
 </body>

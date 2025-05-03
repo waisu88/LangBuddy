@@ -6,7 +6,10 @@ Repeat
 
 
 {% block content_start_audio %}
-<p><b>Powtórz tłumaczenie zdania:</b> <span id="zdanie"></span></p>
+
+
+<b>Powtórz tłumaczenie zdania:</b>
+<span id="zdanie"></span>
 <audio id="audioPlayer" controls></audio>
 <script>
     async function fetchAudio() {
@@ -36,4 +39,7 @@ Repeat
 
     fetchAudio(); // Wywołanie funkcji
 </script>
+
+
+
 {% endblock content_start_audio %}

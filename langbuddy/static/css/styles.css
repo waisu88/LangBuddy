@@ -1,0 +1,133 @@
+/* Ogólne ustawienia */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+}
+
+/* Główny kontener */
+.container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    padding: 30px 24px;
+    max-width: 640px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+/* Instrukcja */
+.instruction {
+    background-color: #e9f1ff;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 17px;
+    font-weight: 500;
+    color: #0a2d52;
+}
+
+/* Blok wyników użytkownika */
+#outputBlock {
+    background-color: #f3f3f3;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Sekcje tekstowe */
+.transcription,
+.translation,
+.accuracy {
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.transcription b,
+.translation b,
+.accuracy b {
+    color: #555;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Tekst */
+span {
+    color: #111;
+    font-weight: 400;
+}
+
+/* Audio player */
+audio {
+    width: 100%;
+    margin: 0 auto;
+    display: block;
+    border-radius: 8px;
+}
+
+/* Przyciski */
+button {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    align-self: center;
+}
+
+/* Start/Stop */
+#recordButton {
+    background: #4CAF50;
+    color: white;
+}
+#recordButton:hover {
+    background: #45a049;
+    transform: scale(1.05);
+}
+
+/* Next */
+#nextButton {
+    background: #2196F3;
+    color: white;
+    display: none;
+    margin-top: 10px;
+}
+#nextButton:hover {
+    background: #0b7dda;
+    transform: scale(1.05);
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 20px;
+    }
+
+    button {
+        font-size: 15px;
+        padding: 12px 22px;
+    }
+
+    .instruction {
+        font-size: 16px;
+    }
+
+    .transcription,
+    .translation,
+    .accuracy {
+        font-size: 15px;
+    }
+}

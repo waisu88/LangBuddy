@@ -1,136 +1,3 @@
-import random
-from languages.models import Sentence
-
-def get_random_sentence(language, level):
-    sentences = Sentence.objects.filter(language=language, level=level)
-    return random.choice(sentences) if sentences.exists() else None
-
-
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework.permissions import IsAuthenticated
-# from .models import LearningSession, UserProgress
-# from languages.models import Language, Sentence, Translation
-# from .serializers import LearningSessionSerializer
-# from .utils.similarity import calculate_similarity
-
-# class LearningView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request):
-#         user = request.user
-#         language_code = request.data.get('language')
-#         level = request.data.get('level')
-
-#         # Znalezienie języka
-#         try:
-#             language = Language.objects.get(code=language_code)
-#         except Language.DoesNotExist:
-#             return Response({'error': 'Invalid language code'}, status=400)
-
-#         # Losowanie zdania
-#         sentence = get_random_sentence(language, level)
-#         if not sentence:
-#             return Response({'error': 'No sentences available for this level'}, status=404)
-
-#         return Response({
-#             'sentence_id': sentence.id,
-#             'content': sentence.content,
-#             'level': sentence.level
-#         })
-
-# class TranslationView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request):
-#         user = request.user
-#         sentence_id = request.data.get('sentence_id')
-#         user_translation = request.data.get('user_translation')
-
-#         try:
-#             sentence = Sentence.objects.get(id=sentence_id)
-#             correct_translation = Translation.objects.filter(sentence=sentence).first()
-
-#             if not correct_translation:
-#                 return Response({'error': 'No translation available'}, status=404)
-
-#             # Obliczanie podobieństwa
-#             similarity_score = calculate_similarity(user_translation, correct_translation.content)
-#             is_correct = similarity_score > 80.0
-
-#             # Zapis wyników
-#             session = LearningSession.objects.create(
-#                 user=user,
-#                 sentence=sentence,
-#                 user_translation=user_translation,
-#                 correct_translation=correct_translation,
-#                 is_correct=is_correct,
-#                 similarity_score=similarity_score
-#             )
-
-#             # Aktualizacja postępów
-#             progress, _ = UserProgress.objects.get_or_create(user=user, language=sentence.language, level=sentence.level)
-#             progress.attempts += 1
-#             if is_correct:
-#                 progress.score += 1
-#             progress.save()
-
-#             return Response({'is_correct': is_correct, 'similarity_score': similarity_score})
-#         except Sentence.DoesNotExist:
-#             return Response({'error': 'Sentence not found'}, status=404)
-
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework.permissions import IsAuthenticated
-
-# from languages.models import Sentence, Translation
-# from .utils.similarity import calculate_similarity
-
-# class EvaluateTranslationView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request):
-#         user = request.user
-#         sentence_id = request.data.get('sentence_id')
-#         user_translation = request.data.get('user_translation')
-
-#         if not sentence_id or not user_translation:
-#             return Response({'error': 'sentence_id i user_translation są wymagane'}, status=400)
-
-#         try:
-#             sentence = Sentence.objects.get(id=sentence_id)
-#             correct_translation = Translation.objects.filter(sentence=sentence).first()
-
-#             if not correct_translation:
-#                 return Response({'error': 'Brak dostępnego tłumaczenia'}, status=404)
-
-#             # Obliczanie podobieństwa
-#             similarity_score = calculate_similarity(user_translation, correct_translation.content)
-#             is_correct = similarity_score >= 80.0
-
-#             # Zapis do LearningSession
-#             learning_session = LearningSession.objects.create(
-#                 user=user,
-#                 sentence=sentence,
-#                 user_translation=user_translation,
-#                 correct_translation=correct_translation,
-#                 is_correct=is_correct,
-#                 similarity_score=similarity_score
-#             )
-
-#             return Response({
-#                 'sentence': sentence.content,
-#                 'user_translation': user_translation,
-#                 'correct_translation': correct_translation.content,
-#                 'similarity_score': similarity_score,
-#                 'is_correct': is_correct,
-#             })
-
-#         except Sentence.DoesNotExist:
-#             return Response({'error': 'Nie znaleziono zdania'}, status=404)
-
-
-
 
 """Widoki funkcji zamienione poniżej na klas oraz DRF"""
 
@@ -138,6 +5,7 @@ def get_random_sentence(language, level):
 Widoki budowane samemu
 
 """
+from django.db import models
 from django.db.models import OuterRef, Subquery, IntegerField, Exists, Value as V
 from django.db.models.functions import Coalesce
 from .models import UserProgress, UserCategoryPreference, UserSentenceProgress
@@ -173,6 +41,17 @@ def choose_sentence(user, mode="repeat"):
         is_mastered=Exists(mastered_subquery)
     ).filter(is_mastered=False)
 
+    # 4b. Dodatkowe filtrowanie dla trybu "translate" → tylko te, które były już powtarzane
+    if mode == "translate":
+        repeated_subquery = UserSentenceProgress.objects.filter(
+            user=user,
+            sentence=OuterRef('pk'),
+            repeat_attempts__gt=0
+        )
+        base_sentences = base_sentences.annotate(
+            was_repeated=Exists(repeated_subquery)
+        ).filter(was_repeated=True)
+
     # 5. Annotacja liczby prób
     if mode == "repeat":
         progress_subquery = UserSentenceProgress.objects.filter(
@@ -185,7 +64,7 @@ def choose_sentence(user, mode="repeat"):
             sentence=OuterRef('pk')
         ).values('translate_attempts')[:1]
     else:
-        progress_subquery = UserSentenceProgress.objects.none().values('repeat_attempts')  # fallback
+        progress_subquery = UserSentenceProgress.objects.none().values('repeat_attempts')
 
     annotated = base_sentences.annotate(
         attempts=Coalesce(Subquery(progress_subquery), V(0), output_field=IntegerField())
@@ -194,6 +73,7 @@ def choose_sentence(user, mode="repeat"):
     # 6. Sortowanie i wybór zdania
     sentence = annotated.order_by('attempts', '?').first()
     return sentence
+
 
 
 
@@ -335,17 +215,72 @@ def calculate_similarity(transcription, translation):
     score = (1 - distance / max(len(transcription), len(translation))) * 100
     return score
 
+"""Dziająca funkcja"""
+# def update_sentence_progress(user, sentence, mode, score):
+#     progress, created = UserSentenceProgress.objects.get_or_create(user=user, sentence=sentence)
+#     progress.update_progress(similarity_score=score, attempt_type=mode)
 
+#     return Response({
+#         "status": "updated",
+#         "is_mastered": progress.is_mastered,
+#         "accuracy": progress.accuracy()
+#     })
+"""Nowa, niesprawdzona funkcja"""
 def update_sentence_progress(user, sentence, mode, score):
     progress, created = UserSentenceProgress.objects.get_or_create(user=user, sentence=sentence)
     progress.update_progress(similarity_score=score, attempt_type=mode)
 
-    return Response({
+    # ⬇️ Nowa część: AKTUALIZACJA postępu kategorii
+    category = sentence.category
+    language = sentence.language
+
+    # ⬇️ Pobierz lub utwórz postęp kategorii
+    category_progress, _ = UserCategoryProgress.objects.get_or_create(
+        user=user,
+        category=category,
+        language=language
+    )
+
+    # ⬇️ Zbierz wszystkie postępy użytkownika w tej kategorii i języku
+    all_progress = UserSentenceProgress.objects.filter(
+        user=user,
+        sentence__category=category,
+        sentence__language=language
+    )
+
+    # ⬇️ Oblicz średni similarity score
+    average_similarity = all_progress.aggregate(avg=models.Avg('last_similarity_score'))['avg'] or 0.0
+
+    # ⬇️ Poziomy CEFR
+    CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    current_index = CEFR_LEVELS.index(category_progress.level)
+
+    # ⬇️ Reguły zmiany poziomu
+    if average_similarity >= 0.8 and current_index < len(CEFR_LEVELS) - 1:
+        category_progress.level = CEFR_LEVELS[current_index + 1]
+    elif average_similarity < 0.4 and current_index > 0:
+        category_progress.level = CEFR_LEVELS[current_index - 1]
+    # else: poziom pozostaje bez zmian
+
+    category_progress.save()
+
+    # ⬇️ AKTUALIZACJA GLOBALNEGO poziomu użytkownika
+    all_category_levels = UserCategoryProgress.objects.filter(user=user)
+    if all_category_levels.exists():
+        level_indices = [CEFR_LEVELS.index(p.level) for p in all_category_levels]
+        average_level_index = round(sum(level_indices) / len(level_indices))
+        global_level = CEFR_LEVELS[average_level_index]
+
+        user_progress, _ = UserProgress.objects.get_or_create(user=user, language=language)
+        user_progress.global_level = global_level
+        user_progress.save()
+
+    # ⬇️ Zwrotka, jeśli potrzebujesz do API
+    return {
         "status": "updated",
         "is_mastered": progress.is_mastered,
         "accuracy": progress.accuracy()
-    })
-
+    }
 
 
 
@@ -366,161 +301,6 @@ def update_user_progress(user, language, score):
 
     progress.save()
 
-
-# from django.db.models import Q, F, OuterRef, Subquery, IntegerField, Value as V
-# from django.db.models.functions import Coalesce
-
-# def choose_sentence(user, mode="repeat"):
-#     # 1. Sprawdzenie globalnego poziomu użytkownika
-#     user_progress = UserProgress.objects.filter(user=user).first()
-#     level = user_progress.global_level if user_progress else 'B1'
-
-
-#     # 2. Sprawdzenie preferowanych kategorii użytkownika
-#     preferred_categories = UserCategoryPreference.objects.filter(
-#         user=user,
-#         is_active=True
-#     ).values_list('category_id', flat=True)
-    
-
-
-#     # 3. Wybór zdań pasujących do poziomu użytkownika oraz wybranych kategorii
-    
-#     # TODO Tutaj możnaby dodać miejsce do zapamiętania kategorii, żeby następne 
-#     # zdanie w danej sesji było z tej samej kategorii o ile się nie wyczerpały
-    
-#     if not preferred_categories:
-#         base_sentences = Sentence.objects.all()
-#     else:
-#         base_sentences = Sentence.objects.filter(
-#             level=level,
-#             category_id__in=preferred_categories
-#         )
-
-#     user_progress_subquery = UserSentenceProgress.objects.filter(
-#         user=user,
-#         sentence=OuterRef('pk'),
-#         is_mastered=False  # <-- wyklucz opanowane
-#     )
-
-#     # 5. Annotacja liczby prób — domyślnie 0
-#     if mode == "repeat":
-#         annotated = base_sentences.annotate(
-#             attempts=Coalesce(Subquery(user_progress_subquery.values('repeat_attempts')[:1]), V(0), output_field=IntegerField())
-#         )
-#     elif mode == "translate":
-#         annotated = base_sentences.annotate(
-#             attempts=Coalesce(Subquery(user_progress_subquery.values('translate_attempts')[:1]), V(0), output_field=IntegerField())
-#         )
-#     else:
-#         annotated = base_sentences.annotate(
-#             attempts=V(0, output_field=IntegerField())
-#         )
-
-#     # 6. Posortuj po liczbie prób rosnąco, a w razie remisu losowo
-#     sentence = annotated.order_by('attempts', '?').first()
-#     return sentence
-
-
-
-
-
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework import status
-# from .models import Sentence
-# from languages.serializers import SentenceSerializer
-# from .whisper_model import model as whisper_model
-# from .utils import calculate_similarity
-# # choose_sentence  # przenieśmy to dla porządku do utils.py
-# from django.conf import settings
-# import os
-# from gtts import gTTS
-# from io import BytesIO
-
-# class RepeatAPIView(APIView):
-#     def get(self, request):
-#         user = request.user
-#         sentence = choose_sentence(user=user, mode="repeat")
-#         if not sentence:
-#             return Response({'error': 'Brak dostępnych zdań'}, status=status.HTTP_404_NOT_FOUND)
-
-#         translation = sentence.translations.filter(language__code="hr").first()
-#         if not translation:
-#             return Response({'error': 'Brak tłumaczenia'}, status=status.HTTP_404_NOT_FOUND)
-
-#         tts = gTTS(text=translation.content, lang="hr")
-#         tts_io = BytesIO()
-#         tts.write_to_fp(tts_io)
-#         tts_io.seek(0)
-
-#         audio_path = os.path.join(settings.MEDIA_ROOT, "response.mp3")
-#         with open(audio_path, "wb") as f:
-#             f.write(tts_io.read())
-
-#         audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
-
-#         return Response({
-#             'mode': 'repeat',
-#             'audio_url': audio_url,
-#             'sentence': SentenceSerializer(sentence).data
-#         })
-
-# class TranslateAPIView(APIView):
-#     def get(self, request):
-#         user = request.user
-#         sentence = choose_sentence(user=user, mode="translate")
-#         if not sentence:
-#             return Response({'error': 'Brak dostępnych zdań'}, status=status.HTTP_404_NOT_FOUND)
-
-#         return Response({
-#             'mode': 'translate',
-#             'sentence': SentenceSerializer(sentence).data
-#         })
-
-# class CheckAnswerAPIView(APIView):
-#     def post(self, request):
-#         if 'audio' not in request.FILES:
-#             return Response({'error': 'Brak pliku audio'}, status=status.HTTP_400_BAD_REQUEST)
-
-#         transcription = self.upload_audio(request)
-
-#         sentence_id = request.data.get('sentence_id')
-#         if not sentence_id:
-#             return Response({'error': 'Brak ID zdania'}, status=status.HTTP_400_BAD_REQUEST)
-
-#         try:
-#             sentence = Sentence.objects.get(id=sentence_id)
-#         except Sentence.DoesNotExist:
-#             return Response({'error': 'Nie znaleziono zdania'}, status=status.HTTP_404_NOT_FOUND)
-
-#         translation = sentence.translations.filter(language__code="hr").first()
-#         if not translation:
-#             return Response({'error': 'Brak tłumaczenia'}, status=status.HTTP_404_NOT_FOUND)
-
-#         score = calculate_similarity(transcription, translation.content)
-
-#         return Response({
-#             'transkrypcja': transcription,
-#             'sentence': sentence.content,
-#             'translation': translation.content,
-#             'levenshtein_score': score
-#         })
-
-#     def upload_audio(self, request):
-#         audio_file = request.FILES['audio']
-#         file_path = os.path.join(settings.MEDIA_ROOT, audio_file.name)
-
-#         with open(file_path, 'wb') as f:
-#             for chunk in audio_file.chunks():
-#                 f.write(chunk)
-
-#         return self.transcribe_audio(file_path)
-
-#     def transcribe_audio(self, file_path):
-#         result = whisper_model.transcribe(file_path, language="hr")
-#         transcription = result['text'].strip()
-#         return transcription
 
 
 
