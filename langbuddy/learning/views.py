@@ -157,10 +157,10 @@ from .whisper_model import model as whisper_model
 @csrf_exempt
 def check_answer(request):
     if request.method == 'POST' and request.FILES.get('audio'):
-        
+        print("dostałem audio")
         # ⬇️ Transkrybujemy audio przez osobną funkcję
         transcription = upload_audio(request)
-        
+        print(transcription)
         # Pobranie trybu nauki i zdania
         sentence_id = request.POST.get('sentence_id')
         if not sentence_id:
