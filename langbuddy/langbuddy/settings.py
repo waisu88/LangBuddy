@@ -42,9 +42,6 @@ INSTALLED_APPS = [
     'languages',
     'learning',
     'langbuddy_frontend',
-    # 'profiles',
-    # 'api',
-    # 'products',
 ]
 
 MIDDLEWARE = [
