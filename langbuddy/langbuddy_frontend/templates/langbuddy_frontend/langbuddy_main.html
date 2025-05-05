@@ -15,9 +15,11 @@
     <div class="container">
         {% block content_start_audio %}{% endblock content_start_audio %}
         {% block content_show_sentence %}{% endblock content_show_sentence %}
-
-        <button id="recordButton" class="record-btn">Start</button>
-
+        <div class="start-retry">
+            <button id="recordButton" class="record-btn">Start</button>
+            <button id="retryButton" class="record-btn gray" style="display: none;">🔁 Spróbuj jeszcze raz</button>    
+        </div>    
+        
         <div id="outputBlock">
             <div class="transcription">
                 <b>Twoja transkrypcja:</b>
@@ -34,32 +36,51 @@
         </div>
 
         <button id="nextButton">Next</button>
+        <div class="nav-buttons">
+            <a href="/" class="btn nav-btn red">🏠 Menu główne</a>
+            <a href="/choose-categories-view/" class="btn nav-btn blue">📚 Wybierz kategorie</a>
+            <button type="button" onclick="location.reload()" class="btn nav-btn gray">🔄 Wybierz inne zdanie</button>
+        </div>
     </div>
 
     <script>
         let mediaRecorder;
-        let audioChunks;
+        let audioChunks = [];
         let isRecording = false;
+        let cancelled = false;
 
         document.getElementById("recordButton").addEventListener("click", async () => {
             if (isRecording) {
+                cancelled = false; // normalne zakończenie
                 mediaRecorder.stop();
                 document.getElementById("recordButton").textContent = "Start";
+                document.getElementById("retryButton").style.display = "none";
             } else {
                 let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
+                cancelled = false;
 
                 mediaRecorder.ondataavailable = event => {
                     audioChunks.push(event.data);
                 };
 
                 mediaRecorder.onstop = async () => {
+                    if (cancelled) {
+                        // 👇 Odrzucamy próbkę, resetujemy tylko UI
+                        console.log("Nagranie anulowane — brak wysyłki.");
+                        document.getElementById("recordButton").textContent = "Start";
+                        document.getElementById("recordButton").disabled = false;
+                        document.getElementById("retryButton").style.display = "none";
+                        return;
+                    }
+
                     let audioBlob = new Blob(audioChunks, { type: "audio/wav" });
                     let formData = new FormData();
                     formData.append("audio", audioBlob, "nagranie.wav");
+
                     document.getElementById("recordButton").textContent = "Przetwarzanie";
-                    document.getElementById("recordButton").disabled = true; 
+                    document.getElementById("recordButton").disabled = true;
 
                     if (window.currentSentenceId) formData.append("sentence_id", window.currentSentenceId);
                     if (window.currentMode) formData.append("mode", window.currentMode);
@@ -76,21 +97,27 @@
                     document.getElementById("translation").textContent = data.translation || "Brak tłumaczenia";
                     document.getElementById("lev_score").textContent = data.levenshtein_score || "Brak wyniku";
 
-                    document.getElementById("recordButton").textContent = "Start";  // Zmieniamy tekst na "Start"
+                    document.getElementById("recordButton").textContent = "Start";
                     document.getElementById("recordButton").disabled = false;
-
+                    document.getElementById("retryButton").style.display = "none";
                     document.getElementById("nextButton").style.display = "block";
                 };
 
                 mediaRecorder.start();
                 document.getElementById("recordButton").textContent = "Stop";
+                document.getElementById("retryButton").style.display = "inline-block";
             }
 
             isRecording = !isRecording;
         });
 
-        document.getElementById("nextButton").addEventListener("click", () => {
-            location.reload();
+        document.getElementById("retryButton").addEventListener("click", () => {
+            if (mediaRecorder && isRecording) {
+                cancelled = true; // 🟥 oznacz anulowanie
+                audioChunks = []; // 🧹 wyczyść
+                mediaRecorder.stop(); // wywoła `onstop`, ale nic nie wyśle
+                isRecording = false;
+            }
         });
     </script>
 </body>

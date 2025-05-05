@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import get_sentence, repeat_view, translate_view, choose_categories_view
+from .views import main_view, repeat_view, translate_view, choose_categories_view, progress_view
 urlpatterns = [
-    path('', get_sentence, name='get_record_view'),
+    path('', main_view, name='main-view'),
 
-    # path('repeat/', repeat, name='repeat'),
+    path('progress-view/', progress_view, name='progress-view'),
     path('repeat-view/', repeat_view, name='repeat-view'),
     path('translate-view/', translate_view, name='translate-view'),
     path('choose-categories-view/', choose_categories_view, name='choose-categories-view'),

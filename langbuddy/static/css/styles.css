@@ -131,3 +131,64 @@ button {
         font-size: 15px;
     }
 }
+
+
+/* Styl ogólny dla przycisków nav */
+.nav-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.nav-btn {
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+}
+
+/* Kolory przycisków */
+.nav-btn.red {
+    background: #f44336;
+    color: white;
+}
+
+.nav-btn.red:hover {
+    background: #e53935;
+    transform: scale(1.05);
+}
+
+.nav-btn.blue {
+    background: #2196F3;
+    color: white;
+}
+
+.nav-btn.blue:hover {
+    background: #0b7dda;
+    transform: scale(1.05);
+}
+
+.nav-btn.gray {
+    background: #cccccc;
+    color: #333;
+}
+
+.nav-btn.gray:hover {
+    background: #b3b3b3;
+    transform: scale(1.05);
+}
+
+.record-btn.gray {
+    background-color: #cccccc;
+    color: #333;
+}
+
+.record-btn.gray:hover {
+    background-color: #b3b3b3;
+    transform: scale(1.05);
+}

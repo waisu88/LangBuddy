@@ -3,6 +3,8 @@ FROM python:3.10.17-slim
 LABEL maintainer="szymon.wais@gmail.com"
 
 ENV PYTHONUNBUFFERED=1
+ENV PATH="/scripts:/py/bin:$PATH"
+ENV XDG_CACHE_HOME="/tmp"
 
 # Kopiowanie plików
 COPY ./requirements.txt /requirements.txt
@@ -12,7 +14,7 @@ COPY /scripts /scripts
 WORKDIR /langbuddy
 EXPOSE 8000
 
-# Instalacja zależności systemowych
+# Instalacja zależności systemowych i Pythona
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libpq-dev \
@@ -23,21 +25,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     linux-headers-amd64 \
     && python -m venv /py \
     && /py/bin/pip install --upgrade pip \
-    && /py/bin/pip install -r /requirements.txt \
+    # ⬇️ Instalacja torch jako binarka z oficjalnego źródła (CPU)
+    && /py/bin/pip install --only-binary=:all: --prefer-binary torch --index-url https://download.pytorch.org/whl/cpu \
+    # ⬇️ Instalacja pozostałych zależności
+    && /py/bin/pip install --no-cache-dir -r /requirements.txt \
+    # ⬇️ Sprzątanie
     && apt-get purge -y --auto-remove gcc g++ build-essential python3-dev \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --no-create-home langbuddy \
+    && rm -rf /var/lib/apt/lists/*
+
+# Dodanie użytkownika aplikacyjnego
+RUN useradd --system --no-create-home langbuddy \
     && mkdir -p /vol/web/static /vol/web/media \
     && chmod -R 755 /vol \
     && chown -R langbuddy:langbuddy /vol \
     && chmod -R +x /scripts
 
-RUN mkdir -p /home/langbuddy/.cache/whisper && \
-    chown -R langbuddy:langbuddy /home/langbuddy
-
-ENV PATH="/scripts:/py/bin:$PATH"
-
+    
 USER langbuddy
 
+
 CMD ["run.sh"]
+

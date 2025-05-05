@@ -29,7 +29,8 @@ Repeat
 
             if (data.audio_url) {
                 let audioPlayer = document.getElementById("audioPlayer");
-                audioPlayer.src = data.audio_url;
+                audioPlayer.src = data.audio_url + '?t=' + new Date().getTime(); // Prosty sposób na caching audio w przeglądarce
+                //Parametr ?t=... powoduje, że adres URL różni się za każdym razem — więc przeglądarka nie używa starego z cache, tylko pobiera nową wersję pliku z serwera.
                 audioPlayer.play();  // Automatyczne odtworzenie
             }
         } catch (error) {

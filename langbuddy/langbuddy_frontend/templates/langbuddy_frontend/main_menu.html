@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% load static %}
+    <title>Langbuddy – Menu główne</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">📚 Langbuddy – Menu główne</h1>
+
+        <div class="nav-buttons">
+            <a href="/choose-categories-view/" class="btn nav-btn blue">📚 Wybierz kategorie</a>
+            <a href="/repeat-view/" class="btn nav-btn green">🔁 Tryb powtarzania</a>
+            <a href="/translate-view/" class="btn nav-btn purple">🌍 Tryb tłumaczenia</a>
+            <a href="/progress-view/" class="btn nav-btn orange">📈 Twój progres</a>
+        </div>
+    </div>
+</body>
+</html>
