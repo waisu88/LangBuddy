@@ -11,6 +11,9 @@ COPY ./requirements.txt /requirements.txt
 COPY ./langbuddy /langbuddy
 COPY /scripts /scripts
 
+RUN mkdir -p /langbuddy/staticfiles
+    
+
 WORKDIR /langbuddy
 EXPOSE 8000
 
@@ -39,11 +42,12 @@ RUN useradd --system --no-create-home langbuddy \
     && mkdir -p /vol/web/static /vol/web/media \
     && chmod -R 755 /vol \
     && chown -R langbuddy:langbuddy /vol \
-    && chmod -R +x /scripts
+    && chown -R langbuddy:langbuddy /langbuddy/staticfiles \
+    && chmod -R +x /scripts \
+    && chmod -R +x /scripts/run.sh
 
     
 USER langbuddy
 
-
-CMD ["run.sh"]
+CMD ["/scripts/run.sh"]
 

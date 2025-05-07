@@ -84,8 +84,11 @@ WSGI_APPLICATION = 'langbuddy.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': os.environ.get('DB_HOST'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASS'),
     }
 }
 
@@ -130,12 +133,19 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Dodaj katalog 'static' w głównym folderze projektu
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = '/vol/web/static'
 import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR/ 'media'
 
+
+STATIC_URL = '/static/static/'
+
+MEDIA_URL = '/static/media/'
+
+MEDIA_ROOT = '/vol/web/media/' 
+STATIC_ROOT = '/vol/web/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
