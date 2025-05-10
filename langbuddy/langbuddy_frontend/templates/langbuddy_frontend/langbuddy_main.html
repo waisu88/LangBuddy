@@ -85,7 +85,7 @@
                     if (window.currentSentenceId) formData.append("sentence_id", window.currentSentenceId);
                     if (window.currentMode) formData.append("mode", window.currentMode);
 
-                    let response = await fetch("http://127.0.0.1:8000/api/learning/check_answer/", {
+                    let response = await fetch("/api/learning/check_answer/", {
                         method: "POST",
                         body: formData,
                     });
@@ -110,7 +110,9 @@
 
             isRecording = !isRecording;
         });
-
+        document.getElementById("nextButton").addEventListener("click", () => {
+            location.reload(); // lub inna logika np. załaduj nowe zdanie AJAX-em
+        });
         document.getElementById("retryButton").addEventListener("click", () => {
             if (mediaRecorder && isRecording) {
                 cancelled = true; // 🟥 oznacz anulowanie

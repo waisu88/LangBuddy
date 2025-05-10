@@ -190,17 +190,31 @@ def check_answer(request):
     return JsonResponse({'error': 'Niepoprawne zapytanie'}, status=400)
 
 
+import os
+from django.conf import settings
+
+WHISPER_AUDIO_DIR = "/tmp/whisper"  # masz ten katalog zamontowany w docker-compose
+
 def upload_audio(request):
     audio_file = request.FILES['audio']
-    file_path = os.path.join("media", audio_file.name)
+    user_id = request.user.id if request.user.is_authenticated else "anon"
+    
+    # Plik o nazwie zależnej od użytkownika
+    file_name = f"audio_{user_id}.wav"
+    file_path = os.path.join(WHISPER_AUDIO_DIR, file_name)
 
-    # Zapisujemy plik
+    # Zapisujemy plik (nadpisuje poprzedni)
     with open(file_path, 'wb') as f:
         for chunk in audio_file.chunks():
             f.write(chunk)
+    transcription = transcribe_audio(file_path)
 
-    # Transkrypcja
-    return transcribe_audio(file_path)
+    try:
+        os.remove(file_path)
+    except Exception as e:
+        print(f"⚠️ Nie udało się usunąć pliku audio: {e}")
+
+    return transcription
 
 
 def transcribe_audio(file_path):
@@ -264,16 +278,16 @@ def update_sentence_progress(user, sentence, mode, score):
 
     category_progress.save()
 
-    # ⬇️ AKTUALIZACJA GLOBALNEGO poziomu użytkownika
-    all_category_levels = UserCategoryProgress.objects.filter(user=user)
-    if all_category_levels.exists():
-        level_indices = [CEFR_LEVELS.index(p.level) for p in all_category_levels]
-        average_level_index = round(sum(level_indices) / len(level_indices))
-        global_level = CEFR_LEVELS[average_level_index]
+    # # ⬇️ AKTUALIZACJA GLOBALNEGO poziomu użytkownika
+    # all_category_levels = UserCategoryProgress.objects.filter(user=user)
+    # if all_category_levels.exists():
+    #     level_indices = [CEFR_LEVELS.index(p.level) for p in all_category_levels]
+    #     average_level_index = round(sum(level_indices) / len(level_indices))
+    #     global_level = CEFR_LEVELS[average_level_index]
 
-        user_progress, _ = UserProgress.objects.get_or_create(user=user, language=language)
-        user_progress.global_level = global_level
-        user_progress.save()
+    #     user_progress, _ = UserProgress.objects.get_or_create(user=user, language=language)
+    #     user_progress.global_level = global_level
+    #     user_progress.save()
 
     # ⬇️ Zwrotka, jeśli potrzebujesz do API
     return {
