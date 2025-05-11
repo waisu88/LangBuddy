@@ -87,16 +87,23 @@ WSGI_APPLICATION = 'langbuddy.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
+if DEBUG == 1:
+    DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.environ.get('DB_HOST'),
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'HOST': os.environ.get('DB_HOST'),
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASS'),
+        }
+    }
 
 
 # Password validation
@@ -134,17 +141,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 
-STATIC_URL = '/static/'
+
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Dodaj katalog 'static' w głównym folderze projektu
 ]
-STATIC_ROOT = '/vol/web/static'
-import os
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR/ 'media'
-
 
 STATIC_URL = '/static/static/'
 
