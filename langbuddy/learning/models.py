@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from languages.models import Sentence, Category, Language
+from django.db.models import JSONField
 
 class UserCategoryPreference(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='category_preferences')
@@ -11,11 +12,6 @@ class UserCategoryPreference(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.category.name} (priority: {self.priority})"
 
-
-from django.db import models
-from django.contrib.auth.models import User
-from django.db.models import JSONField  # JSONField działa z SQLite od Django 3.1
-from languages.models import Sentence
 
 class UserSentenceProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -56,7 +52,6 @@ class UserSentenceProgress(models.Model):
         # (Optional) treat similarity >= 0.8 as correct
         if similarity_score >= 0.8:
             self.correct_attempts += 1
-        print(self.__dict__)
         self.save()
 
     def accuracy(self):
@@ -78,22 +73,6 @@ class UserCategoryProgress(models.Model):
     mastered_sentences = models.PositiveIntegerField(default=0)
     total_sentences = models.PositiveIntegerField(default=0)
     is_completed = models.BooleanField(default=False)
-
-    def check_completion(self):
-        if self.total_sentences > 0 and (self.mastered_sentences / self.total_sentences) >= 0.8:
-            self.is_completed = True
-            self.upgrade_level()
-
-    def upgrade_level(self):
-        if self.is_completed and self.level != 'C2':
-            levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-            current_index = levels.index(self.level)
-            next_level = levels[current_index + 1] if current_index + 1 < len(levels) else 'C2'
-            self.level = next_level
-            self.is_completed = False  # Reset completion for next level
-            self.mastered_sentences = 0
-            self.total_sentences = 0
-            self.save()
 
     def __str__(self):
         return f"{self.user.username} - {self.category.name} ({self.level})"

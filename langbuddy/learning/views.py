@@ -1,10 +1,3 @@
-
-"""Widoki funkcji zamienione poniżej na klas oraz DRF"""
-
-"""
-Widoki budowane samemu
-
-"""
 from django.db import models
 from django.db.models import OuterRef, Subquery, IntegerField, Exists, Value as V
 from django.db.models.functions import Coalesce
@@ -76,14 +69,11 @@ def choose_sentence(user, mode="repeat"):
 
 
 
-
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 import os
 from django.conf import settings
-
 
 from io import BytesIO
 from gtts import gTTS
@@ -126,9 +116,6 @@ def repeat(request):
 def translate(request):
     user = request.user
     sentence = choose_sentence(user=user, mode="translate")
-    """PROBNE PRINTY"""
-    print(sentence.content)
-    print(sentence.translations.filter(language__code="hr").first().content)
     
     if not sentence:
         return JsonResponse({'error': 'Brak dostępnych zdań'}, status=404)
@@ -143,12 +130,9 @@ def translate(request):
         }
     })
 
-import os
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from difflib import SequenceMatcher
+
 from learning.models import UserProgress
-from languages.models import Sentence, Translation
+from languages.models import Sentence
 # import whisper
 from .whisper_model import model as whisper_model
 
@@ -157,10 +141,8 @@ from .whisper_model import model as whisper_model
 @csrf_exempt
 def check_answer(request):
     if request.method == 'POST' and request.FILES.get('audio'):
-        print("dostałem audio")
         # ⬇️ Transkrybujemy audio przez osobną funkcję
         transcription = upload_audio(request)
-        print(transcription)
         # Pobranie trybu nauki i zdania
         sentence_id = request.POST.get('sentence_id')
         if not sentence_id:
@@ -175,7 +157,6 @@ def check_answer(request):
 
         score = calculate_similarity(transcription, translation)
 
-        # Tu możesz też np. zaktualizować UserSentenceProgress
         
         mode = request.POST.get('mode')
         update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
@@ -190,10 +171,8 @@ def check_answer(request):
     return JsonResponse({'error': 'Niepoprawne zapytanie'}, status=400)
 
 
-import os
-from django.conf import settings
 
-WHISPER_AUDIO_DIR = "/tmp/whisper"  # masz ten katalog zamontowany w docker-compose
+WHISPER_AUDIO_DIR = "/tmp/whisper"  # katalog zamontowany w docker-compose
 
 def upload_audio(request):
     audio_file = request.FILES['audio']
@@ -221,6 +200,7 @@ def transcribe_audio(file_path):
     result = whisper_model.transcribe(file_path, language="hr")
     transcription = result['text'].strip()
     return transcription
+
 
 from Levenshtein import distance as levenshtein
 
@@ -314,10 +294,6 @@ def update_user_progress(user, language, score):
             progress.level = levels[current_index + 1]
 
     progress.save()
-
-
-
-
 
 
 """Widoki dla progresu. Model based Views"""

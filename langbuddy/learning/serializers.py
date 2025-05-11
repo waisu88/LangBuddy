@@ -6,10 +6,6 @@ class UserProgressSerializer(serializers.ModelSerializer):
         model = UserProgress
         fields = ['user', 'language', 'global_level']
 
-# class LearningSessionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = LearningSession
-#         fields = ['user', 'sentence', 'user_translation', 'correct_translation', 'is_correct', 'similarity_score', 'created_at']
 
 class UserCategoryProgressSerializer(serializers.ModelSerializer):
     class Meta:
