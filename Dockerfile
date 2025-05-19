@@ -6,6 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PATH="/scripts:/py/bin:$PATH"
 ENV XDG_CACHE_HOME="/tmp/whisper"
 
+RUN mkdir -p /tmp/whisper && chmod -R 777 /tmp/whisper
 # --- WSTĘPNA KONFIGURACJA I INSTALACJE ---
 
 # Skopiuj tylko requirements (rzadko się zmienia)
@@ -32,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd --system --no-create-home langbuddy \
  && mkdir -p /vol/web/static /vol/web/media \
  && chmod -R 755 /vol
+
 
 # --- DOPIERO TERAZ kopiuj kod i skrypty (które się zmieniają) ---
 COPY ./langbuddy /langbuddy
