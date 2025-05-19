@@ -4,9 +4,10 @@ LABEL maintainer="szymon.wais@gmail.com"
 
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/scripts:/py/bin:$PATH"
+
+RUN mkdir -p /tmp/whisper 
 ENV XDG_CACHE_HOME="/tmp/whisper"
 
-RUN mkdir -p /tmp/whisper && chmod -R 777 /tmp/whisper
 # --- WSTĘPNA KONFIGURACJA I INSTALACJE ---
 
 # Skopiuj tylko requirements (rzadko się zmienia)
@@ -43,6 +44,8 @@ RUN chown -R langbuddy:langbuddy /vol /langbuddy /scripts \
  && chmod -R +x /scripts
 
 USER langbuddy
+RUN chmod -R 777 /tmp/whisper
+
 WORKDIR /langbuddy
 EXPOSE 8000
 
