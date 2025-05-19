@@ -4,7 +4,7 @@ LABEL maintainer="szymon.wais@gmail.com"
 
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/scripts:/py/bin:$PATH"
-ENV XDG_CACHE_HOME="/tmp"
+ENV XDG_CACHE_HOME="/tmp/whisper"
 
 # --- WSTĘPNA KONFIGURACJA I INSTALACJE ---
 
