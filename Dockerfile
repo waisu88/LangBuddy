@@ -32,7 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Dodanie użytkownika aplikacyjnego
 RUN useradd --system --no-create-home langbuddy \
  && mkdir -p /vol/web/static /vol/web/media \
- && chmod -R 755 /vol
+ && chmod -R 755 /vol \
+ && mkdir -p /app/whisper \
+ && chown -R langbuddy:langbuddy /vol /app/whisper
 
 
 # --- DOPIERO TERAZ kopiuj kod i skrypty (które się zmieniają) ---
