@@ -4,6 +4,10 @@ services:
   app:
     build:
       context: .
+    deploy:
+      resources:
+        limits:
+          memory: 1.5g
     restart: always
     volumes: 
       - static-data:/vol/web
