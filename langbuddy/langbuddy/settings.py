@@ -167,3 +167,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://langbuddy.xyz",
     "https://www.langbuddy.xyz",
 ]
+
+
+LOGIN_REDIRECT_URL = '/'

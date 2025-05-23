@@ -192,3 +192,46 @@ button {
     background-color: #b3b3b3;
     transform: scale(1.05);
 }
+
+
+.top-nav {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 12px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    gap: 12px;
+    font-size: 16px;
+}
+
+.nav-auth-btn {
+    background-color: #2196F3;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-auth-btn:hover {
+    background-color: #0b7dda;
+    transform: scale(1.05);
+}
+
+.logout-btn {
+    background-color: #f44336;
+}
+
+.logout-btn:hover {
+    background-color: #e53935;
+}
+
+.welcome-text {
+    margin-right: 8px;
+    font-weight: 500;
+    color: #333;
+}

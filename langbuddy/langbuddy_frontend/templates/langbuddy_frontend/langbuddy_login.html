@@ -1,0 +1,14 @@
+{% extends 'langbuddy_main.html' %}
+
+{% block content_login %}
+<div class="container">
+    <h2>Zaloguj się</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Zaloguj</button>
+    </form>
+
+    <p>Nie masz konta? <a href="{% url 'register' %}">Zarejestruj się</a></p>
+</div>
+{% endblock content_login %}

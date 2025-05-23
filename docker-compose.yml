@@ -14,6 +14,7 @@ services:
     volumes:
       - ./langbuddy:/langbuddy
       - ./data/web:/vol/web
+      - ./models/whisper:/tmp/whisper
     environment:
       - SECRET_KEY=devsecretkey
       - DEBUG=1

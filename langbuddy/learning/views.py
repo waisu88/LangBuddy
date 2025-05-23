@@ -78,19 +78,23 @@ from django.conf import settings
 from io import BytesIO
 from gtts import gTTS
 
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
+@login_required
 def repeat(request):
     user = request.user
     sentence = choose_sentence(user=user, mode="repeat")
-
     if not sentence:
         return JsonResponse({'error': 'Brak dostępnych zdań'}, status=404)
-
-    translation = sentence.translations.filter(language__code="hr").first()
+    lang = user.profile.target_language
+    translation = sentence.translations.filter(language__code=lang).first()
     if not translation:
         return JsonResponse({'error': 'Brak tłumaczenia'}, status=404)
+    
+    
 
-    tts = gTTS(text=translation.content, lang="hr")
+    tts = gTTS(text=translation.content, lang=lang)
     tts_io = BytesIO()
     tts.write_to_fp(tts_io)
     tts_io.seek(0)
@@ -112,7 +116,7 @@ def repeat(request):
         }
     })
 
-
+@login_required
 def translate(request):
     user = request.user
     sentence = choose_sentence(user=user, mode="translate")
@@ -152,8 +156,10 @@ def check_answer(request):
             sentence = Sentence.objects.get(id=sentence_id)
         except Sentence.DoesNotExist:
             return JsonResponse({'error': 'Nie znaleziono zdania'}, status=404)
-        
-        translation = sentence.translations.filter(language__code="hr").first().content
+        user = request.user
+        lang = user.profile.target_language
+        print(lang)
+        translation = sentence.translations.filter(language__code=lang).first().content
 
         score = calculate_similarity(transcription, translation)
 
@@ -174,10 +180,14 @@ def check_answer(request):
 
 WHISPER_AUDIO_DIR = "/tmp/whisper"  # katalog zamontowany w docker-compose
 
+
+from django.conf import settings
+
 def upload_audio(request):
     audio_file = request.FILES['audio']
-    user_id = request.user.id if request.user.is_authenticated else "anon"
-    
+    user = request.user
+    user_id = user.id if user.is_authenticated else "anon"
+    lang = user.profile.target_language
     # Plik o nazwie zależnej od użytkownika
     file_name = f"audio_{user_id}.wav"
     file_path = os.path.join(WHISPER_AUDIO_DIR, file_name)
@@ -186,7 +196,7 @@ def upload_audio(request):
     with open(file_path, 'wb') as f:
         for chunk in audio_file.chunks():
             f.write(chunk)
-    transcription = transcribe_audio(file_path)
+    transcription = transcribe_audio(file_path, lang)
 
     try:
         os.remove(file_path)
@@ -196,8 +206,8 @@ def upload_audio(request):
     return transcription
 
 
-def transcribe_audio(file_path):
-    result = whisper_model.transcribe(file_path, language="hr")
+def transcribe_audio(file_path, lang):
+    result = whisper_model.transcribe(file_path, language=lang)
     transcription = result['text'].strip()
     return transcription
 

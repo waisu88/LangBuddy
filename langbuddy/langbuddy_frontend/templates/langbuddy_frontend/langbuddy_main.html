@@ -13,6 +13,18 @@
 </head>
 <body>
     <div class="container">
+        <div class="top-nav">
+            {% if user.is_authenticated %}
+                <span class="welcome-text">Witaj, {{ user.username }}!</span>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button class="nav-auth-btn logout-btn">🚪 Wyloguj</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-auth-btn login-btn">🔐 Zaloguj</a>
+            {% endif %}
+            {% block content_login %}{% endblock content_login %}
+        </div>
         {% block content_start_audio %}{% endblock content_start_audio %}
         {% block content_show_sentence %}{% endblock content_show_sentence %}
         <div class="start-retry">
