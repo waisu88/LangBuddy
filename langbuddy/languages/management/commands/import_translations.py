@@ -5,6 +5,9 @@ from languages.models import Sentence, Language, Translation
 
 class Command(BaseCommand):
     help = "Wczytaj dodatkowe tłumaczenia (np. czeskie, hiszpańskie) do istniejących zdań po polsku"
+    """
+    Przykład użycia:
+    python manage.py import_translations --lang=cs --input=zdania_cz.json"""
 
     def add_arguments(self, parser):
         parser.add_argument("--lang", required=True, help="Kod języka tłumaczenia (np. 'cs', 'es')")
@@ -40,7 +43,7 @@ class Command(BaseCommand):
                 continue
 
             try:
-                sentence = Sentence.objects.get(content=pl_text, language=pl_language)
+                sentence = Sentence.objects.filter(content=pl_text, language=pl_language).first()
                 obj, created = Translation.objects.get_or_create(
                     sentence=sentence,
                     language=translation_language,

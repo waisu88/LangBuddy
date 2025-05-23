@@ -158,7 +158,6 @@ def check_answer(request):
             return JsonResponse({'error': 'Nie znaleziono zdania'}, status=404)
         user = request.user
         lang = user.profile.target_language
-        print(lang)
         translation = sentence.translations.filter(language__code=lang).first().content
 
         score = calculate_similarity(transcription, translation)
@@ -362,10 +361,7 @@ def user_category_preferences(request):
         return Response(selected_categories)
     
     if request.method == 'POST':
-        print("Start")
         selected_categories = request.data.get('selected_categories', [])
-        print(selected_categories)
-
         # Dezaktywuj wszystkie stare
         UserCategoryPreference.objects.filter(user=user).update(is_active=False)
 
