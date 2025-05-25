@@ -164,8 +164,10 @@ def check_answer(request):
 
         
         mode = request.POST.get('mode')
-        update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
-
+        if score > 0.50:
+            update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
+        else:
+            score = "Niepoprawna transkrypcja, powtórz nagranie"
         return JsonResponse({
             'transkrypcja': transcription,
             'sentence': sentence.content,

@@ -107,7 +107,14 @@
 
                     document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
                     document.getElementById("translation").textContent = data.translation || "Brak tłumaczenia";
-                    document.getElementById("lev_score").textContent = data.levenshtein_score || "Brak wyniku";
+                    const score = data.levenshtein_score;
+
+                    if (typeof score === "number") {
+                        document.getElementById("lev_score").textContent = `${Math.round(score)}%`;
+                    } else {
+                        document.getElementById("lev_score").textContent = score || "Brak wyniku";
+                    }
+
 
                     document.getElementById("recordButton").textContent = "Start";
                     document.getElementById("recordButton").disabled = false;
