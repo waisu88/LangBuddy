@@ -7,6 +7,7 @@ from languages.models import Sentence
 def choose_sentence(user, mode="repeat"):
     # 1. Globalny poziom użytkownika
     user_progress = UserProgress.objects.filter(user=user).first()
+    level = user.profile.target_language_level
     level = user_progress.global_level if user_progress else 'B1'
 
     # 2. Preferowane kategorie użytkownika
@@ -17,7 +18,7 @@ def choose_sentence(user, mode="repeat"):
 
     # 3. Bazowy queryset zdań
     if not preferred_categories:
-        base_sentences = Sentence.objects.all()
+        base_sentences = Sentence.objects.filter(level=level)
     else:
         base_sentences = Sentence.objects.filter(
             level=level,
@@ -164,7 +165,8 @@ def check_answer(request):
 
         
         mode = request.POST.get('mode')
-        print(score)
+    
+        # Jeśli wynik > 50%, uznajemy odpowiedź za poprawną
         if score > 50:
             update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
         else:

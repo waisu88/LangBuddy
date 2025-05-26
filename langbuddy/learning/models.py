@@ -46,11 +46,11 @@ class UserSentenceProgress(models.Model):
         self.recent_scores = scores[-3:]
 
         # Master if average of last 3 >= 0.8
-        if len(self.recent_scores) == 3 and sum(self.recent_scores) / 3 >= 0.8:
+        if len(self.recent_scores) == 3 and sum(self.recent_scores) / 3 >= 80:
             self.is_mastered = True
 
         # (Optional) treat similarity >= 0.8 as correct
-        if similarity_score >= 0.8:
+        if similarity_score >= 80:
             self.correct_attempts += 1
         self.save()
 
