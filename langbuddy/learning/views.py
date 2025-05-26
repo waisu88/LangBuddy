@@ -8,8 +8,8 @@ def choose_sentence(user, mode="repeat"):
     # 1. Globalny poziom użytkownika
     user_progress = UserProgress.objects.filter(user=user).first()
     level = user.profile.target_language_level
-    level = user_progress.global_level if user_progress else 'B1'
-
+    # level = user_progress.global_level if user_progress else 'B1'
+    
     # 2. Preferowane kategorie użytkownika
     preferred_categories = UserCategoryPreference.objects.filter(
         user=user,
