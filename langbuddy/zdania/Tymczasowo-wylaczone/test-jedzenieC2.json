@@ -1,0 +1,12 @@
+{
+  "category": "Jedzenie i napoje",
+  "level": "C2",
+  "sentences": [
+    {"pl": "Jakie są Twoje przewidywania co do przyszłości chorwackiej kuchni w kontekście globalnych trendów kulinarnych?", "hr": "Koja su tvoja predviđanja za budućnost hrvatske kuhinje u kontekstu globalnih kulinarskih trendova?"},
+    {"pl": "Czy widzisz jakiekolwiek zagrożenia związane z rosnącym wpływem kuchni międzynarodowej na chorwacką gastronomię?", "hr": "Vidiš li ikakve prijetnje povezane s rastućim utjecajem međunarodne kuhinje na hrvatsku gastronomiju?"},
+    {"pl": "Zastanawiam się, czy można połączyć nowoczesną kuchnię molekularną z tradycyjnymi chorwackimi potrawami, aby uzyskać zupełnie nowe doświadczenie kulinarne.", "hr": "Razmišljam može li se moderna molekularna kuhinja kombinirati s tradicionalnim hrvatskim jelima kako bi se stvorilo potpuno novo kulinarsko iskustvo."},
+    {"pl": "Jakie innowacyjne techniki kulinarne mogą pomóc w zachowaniu autentyczności chorwackiej kuchni, jednocześnie odpowiadając na zmieniające się potrzeby konsumentów?", "hr": "Koje inovativne kulinarske tehnike mogu pomoći u očuvanju autentičnosti hrvatske kuhinje, a istovremeno odgovoriti na promjenjive potrebe potrošača?"},
+    {"pl": "Czy dostrzegasz jakieś niebezpieczeństwa związane z tzw. 'gastronomią fusion', która łączy różne tradycje kulinarne, w kontekście zachowania oryginalnych potraw?", "hr": "Vidite li opasnosti povezane s tzv. 'fusion' gastronomijom koja spaja različite kulinarske tradicije, u kontekstu očuvanja originalnih jela?"},
+    {"pl": "Jakie zmiany w podejściu do produkcji i konsumpcji żywności w Chorwacji byłyby najbardziej korzystne w kontekście zrównoważonego rozwoju?", "hr": "Koje bi promjene u pristupu proizvodnji i potrošnji hrane u Hrvatskoj bile najkorisnije u kontekstu održivog razvoja?"}
+  ]
+}

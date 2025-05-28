@@ -1,0 +1,11 @@
+{
+  "category": "Pogoda",
+  "level": "A1",
+  "sentences": [
+    {"pl": "Świeci słońce.", "hr": "Sunce sja."},
+    {"pl": "Pada deszcz.", "hr": "Pada kiša."},
+    {"pl": "Jest zimno.", "hr": "Hladno je."},
+    {"pl": "Jest gorąco.", "hr": "Vruće je."},
+    {"pl": "Czy dziś można surfować?", "hr": "Može li se danas surfati?"}
+  ]
+}

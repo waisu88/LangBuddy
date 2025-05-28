@@ -1,0 +1,10 @@
+{
+  "category": "Pogoda",
+  "level": "C1",
+  "sentences": [
+    {"pl": "Wysoka jakość prognoz pogody może znacząco poprawić zarządzanie kryzysowe.", "hr": "Visoka kvaliteta vremenskih prognoza može značajno poboljšati krizno upravljanje."},
+    {"pl": "Pamiętaj, że pogoda w górach może zmieniać się niezwykle szybko.", "hr": "Zapamtite da se vrijeme u planinama može mijenjati izuzetno brzo."},
+    {"pl": "Stale monitoruj zmiany pogodowe, zwłaszcza podczas długich rejsów morskich.", "hr": "Kontinuirano pratite vremenske promjene, osobito tijekom dugih plovidbi."},
+    {"pl": "Jakie innowacje technologiczne pomogłyby lepiej przewidywać katastrofy naturalne?", "hr": "Koje bi tehnološke inovacije mogle pomoći u boljem predviđanju prirodnih katastrofa?"}
+  ]
+}

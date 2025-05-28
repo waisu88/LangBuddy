@@ -1,0 +1,11 @@
+{
+  "category": "Pogoda",
+  "level": "C2",
+  "sentences": [
+    {"pl": "Czy rozumiesz mechanizm powstawania superkomórek burzowych?", "hr": "Razumijete li mehanizam nastanka superćelijskih oluja?"},
+    {"pl": "Przedstaw skutki oddziaływania frontów polarno-morskich na pogodę w Europie.", "hr": "Prikažite učinke djelovanja polarno-morskih fronti na vrijeme u Europi."},
+    {"pl": "Upalne dni przeplatane burzami to typowy obraz lata w klimacie umiarkowanym.", "hr": "Vrući dani praćeni olujama tipični su za ljeto u umjerenoj klimi."},
+    {"pl": "Czy potrafisz przewidzieć ryzyko wystąpienia gradobicia na podstawie profilu termicznego atmosfery?", "hr": "Možete li predvidjeti rizik od tuče na temelju termalnog profila atmosfere?"},
+    {"pl": "Nie ignoruj sygnałów świadczących o możliwości wystąpienia trąby powietrznej.", "hr": "Ne zanemarujte znakove koji ukazuju na mogućnost pojave tornada."}
+  ]
+}

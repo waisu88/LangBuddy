@@ -1,0 +1,12 @@
+{
+  "category": "Jedzenie i napoje",
+  "level": "C1",
+  "sentences": [
+    {"pl": "Ciekawi mnie, jak zmienia się jakość lokalnych win w zależności od regionu Chorwacji, zwłaszcza w kontekście ostatnich roczników.", "hr": "Zanima me kako se kvaliteta lokalnih vina mijenja ovisno o regiji Hrvatske, osobito u kontekstu posljednjih berbi."},
+    {"pl": "Czy zauważyłeś, że niektóre tradycyjne potrawy w Chorwacji są dostosowane do nowoczesnych trendów kulinarnych?", "hr": "Jesi li primijetio da su neka tradicionalna jela u Hrvatskoj prilagođena modernim kulinarskim trendovima?"},
+    {"pl": "Czy oferujecie degustację win, która pozwala poznać wina z różnych regionów Chorwacji?", "hr": "Nudi li se degustacija vina koja omogućuje upoznavanje vina iz različitih regija Hrvatske?"},
+    {"pl": "Czy tradycyjne potrawy chorwackie są obecnie bardziej zróżnicowane, aby sprostać wymaganiom turystów?", "hr": "Jesu li tradicionalna hrvatska jela sada raznovrsnija kako bi zadovoljila zahtjeve turista?"},
+    {"pl": "Proszę o przygotowanie posiłku, który będzie połączeniem lokalnych składników i nowoczesnych technik gotowania.", "hr": "Molim te, pripremi obrok koji će biti spoj lokalnih sastojaka i modernih kuhinjskih tehnika."},
+    {"pl": "Czy w tej restauracji używają wyłącznie produktów pochodzących z ekologicznych upraw?", "hr": "Koristi li ovaj restoran isključivo proizvode iz ekoloških uzgoja?"}
+  ]
+}

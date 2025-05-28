@@ -1,0 +1,11 @@
+{
+  "category": "Pogoda",
+  "level": "B2",
+  "sentences": [
+    {"pl": "Nocne przymrozki mogą uszkodzić wczesne uprawy.", "hr": "Noćni mrazevi mogu oštetiti rane usjeve."},
+    {"pl": "Silny wiatr zerwał linie energetyczne w kilku miejscowościach.", "hr": "Jak vjetar prekinuo je elektroenergetske vodove u nekoliko naselja."},
+    {"pl": "Długie okresy bez opadów prowadzą do obniżenia poziomu wód gruntowych.", "hr": "Duga razdoblja bez oborina dovode do smanjenja razine podzemnih voda."},
+    {"pl": "Deszcz ze śniegiem znacznie utrudnił poranny dojazd do pracy.", "hr": "Kiša sa snijegom znatno je otežala jutarnji dolazak na posao."},
+    {"pl": "Ulewne deszcze mogą szybko zamienić drogi w rwące rzeki.", "hr": "Obilne kiše mogu brzo pretvoriti ceste u bujice."}
+  ]
+}

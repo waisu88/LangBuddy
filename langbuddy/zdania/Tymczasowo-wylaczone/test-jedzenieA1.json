@@ -1,0 +1,11 @@
+{
+  "category": "Jedzenie i napoje",
+  "level": "A1",
+  "sentences": [
+    {"pl": "Co chcesz zjeść na obiad?", "hr": "Što želiš jesti za ručak?"},
+    {"pl": "Lubię zupę pomidorową.", "hr": "Volim juhu od rajčice."},
+    {"pl": "Podaj mi proszę wodę.", "hr": "Daj mi, molim te, vodu."},
+    {"pl": "Poproszę jedną kawę.", "hr": "Molim te, jednu kavu."},
+    {"pl": "Zjedzmy razem śniadanie.", "hr": "Jedimo zajedno doručak."}
+  ]
+}

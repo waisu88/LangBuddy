@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from languages.models import Sentence, Category, Language
-from django.db.models import JSONField
+from django.db.models import JSONField, Sum
 
 class UserCategoryPreference(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='category_preferences')
@@ -12,70 +12,168 @@ class UserCategoryPreference(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.category.name} (priority: {self.priority})"
 
+from django.utils import timezone
 
 class UserSentenceProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE)
 
-    correct_attempts = models.PositiveIntegerField(default=0)
     total_attempts = models.PositiveIntegerField(default=0)
+        
     repeat_attempts = models.PositiveIntegerField(default=0)
-    translate_attempts = models.PositiveIntegerField(default=0)
+    correct_attempts_repeat = models.PositiveIntegerField(default=0)
 
-    last_similarity_score = models.FloatField(default=0.0)
-    recent_scores = JSONField(default=list)  # <-- nowość
-    is_mastered = models.BooleanField(default=False)
+    translate_attempts = models.PositiveIntegerField(default=0)
+    correct_attempts_translate = models.PositiveIntegerField(default=0)
+
+    last_similarity_score_repeat = models.FloatField(default=0.0)
+    recent_scores_repeat = JSONField(default=list, blank=True)  # <-- nowość
+
+    last_similarity_score_translate = models.FloatField(default=0.0)
+    recent_scores_translate = JSONField(default=list, blank=True)  # <-- nowość
+
+    is_mastered_repeat = models.BooleanField(default=False)
+    is_mastered_translate = models.BooleanField(default=False)
     last_attempt_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('user', 'sentence')
 
-    def update_progress(self, similarity_score: float, attempt_type: str = "default"):
+    def update_progress(self, similarity_score: float, attempt_type: str = "repeat"):
         self.total_attempts += 1
-        self.last_similarity_score = similarity_score
+        self.last_attempt_at = timezone.now()
 
-        # Update repeat/translate attempts
         if attempt_type == "repeat":
             self.repeat_attempts += 1
+            self.last_similarity_score_repeat = similarity_score
+            scores = self.recent_scores_repeat or []
+            scores.append(similarity_score)
+            self.recent_scores_repeat = scores[-3:]
+            if similarity_score >= 80:
+                self.correct_attempts_repeat += 1
+            if len(self.recent_scores_repeat) == 3 and sum(self.recent_scores_repeat) / 3 >= 80:
+                self.is_mastered_repeat = True
+            try:
+                category_progress = UserCategoryProgress.objects.get(user=self.user, category=self.sentence.category)
+                category_progress.evaluate_demotion()
+            except UserCategoryProgress.DoesNotExist:
+                pass
+
         elif attempt_type == "translate":
             self.translate_attempts += 1
+            self.last_similarity_score_translate = similarity_score
+            scores = self.recent_scores_translate or []
+            scores.append(similarity_score)
+            self.recent_scores_translate = scores[-3:]
+            if similarity_score >= 80:
+                self.correct_attempts_translate += 1
+            if self.is_mastered_repeat and len(self.recent_scores_translate) == 3 and sum(self.recent_scores_translate) / 3 >= 80:
+                self.is_mastered_translate = True
+            try:
+                category_progress = UserCategoryProgress.objects.get(user=self.user, category=self.sentence.category)
+                category_progress.evaluate_promotion()
+            except UserCategoryProgress.DoesNotExist:
+                pass
 
-        # Update recent scores (keep only last 3)
-        scores = self.recent_scores or []
-        scores.append(similarity_score)
-        self.recent_scores = scores[-3:]
-
-        # Master if average of last 3 >= 0.8
-        if len(self.recent_scores) == 3 and sum(self.recent_scores) / 3 >= 80:
-            self.is_mastered = True
-
-        # (Optional) treat similarity >= 0.8 as correct
-        if similarity_score >= 80:
-            self.correct_attempts += 1
         self.save()
 
     def accuracy(self):
-        return (self.correct_attempts / self.total_attempts) * 100 if self.total_attempts > 0 else 0
+        return (self.correct_attempts_translate / self.total_attempts) * 100 if self.total_attempts > 0 else 0
 
     def __str__(self):
-        status = "Mastered" if self.is_mastered else "In Progress"
+        status = "Mastered" if self.is_mastered_translate else "In Progress"
         return f"{self.user.username} - {self.sentence.id} ({status}, {self.accuracy()}%)"
 
 class UserCategoryProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
-    level = models.CharField(  # <-- POZIOM DLA KONKRETNEJ KATEGORII!
+
+    level = models.CharField(
         max_length=2,
         choices=[('A1', 'A1'), ('A2', 'A2'), ('B1', 'B1'), ('B2', 'B2'), ('C1', 'C1'), ('C2', 'C2')],
         default='B1'
     )
-    mastered_sentences = models.PositiveIntegerField(default=0)
-    total_sentences = models.PositiveIntegerField(default=0)
-    is_completed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'category')
 
     def __str__(self):
         return f"{self.user.username} - {self.category.name} ({self.level})"
+
+    def evaluate_promotion(self):
+        progress_qs = UserSentenceProgress.objects.filter(
+            user=self.user,
+            sentence__category=self.category
+        )
+        total = progress_qs.count()
+        attempted = progress_qs.exclude(translate_attempts=0).count()
+        mastered = progress_qs.filter(is_mastered_translate=True).count()
+
+        if total == 0:
+            return
+
+        if attempted / total >= 0.7 and mastered / attempted >= 0.75:
+            levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+            current_idx = levels.index(self.level)
+            if current_idx < len(levels) - 1:
+                self.level = levels[current_idx + 1]
+                self.save()
+
+    def evaluate_demotion(self):
+        levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+        current_idx = levels.index(self.level)
+
+        if current_idx == 0:
+            return  # Nie można spaść poniżej A1
+
+        progress_qs = UserSentenceProgress.objects.filter(
+            user=self.user,
+            sentence__category=self.category,
+            sentence__level=self.level
+        ).filter(repeat_attempts__gte=3)  # tylko zdania, które miały szansę na naukę
+
+        total_repeat_attempts = progress_qs.aggregate(total=Sum('repeat_attempts'))['total'] or 0
+        total_correct_repeat = progress_qs.aggregate(correct=Sum('correct_attempts_repeat'))['correct'] or 0
+
+        if total_repeat_attempts == 0:
+            return
+
+        accuracy = total_correct_repeat / total_repeat_attempts
+
+        if accuracy <= 0.33:
+            new_level = levels[current_idx - 1]
+            self.level = new_level
+            self.save()
+
+            # Wyczyść dane z wyższego poziomu (z którego spadamy)
+            UserSentenceProgress.objects.filter(
+                user=self.user,
+                sentence__category=self.category,
+                sentence__level=levels[current_idx]
+            ).update(
+                is_mastered_repeat=False,
+                is_mastered_translate=False,
+                recent_scores_repeat=[],
+                recent_scores_translate=[],
+            )
+
+            # Zresetuj częściowo dane z poziomu, na który spadamy
+            lower_level_qs = UserSentenceProgress.objects.filter(
+                user=self.user,
+                sentence__category=self.category,
+                sentence__level=new_level
+            )
+
+            for progress in lower_level_qs:
+                progress.recent_scores_repeat = progress.recent_scores_repeat[1:] if len(progress.recent_scores_repeat) > 0 else []
+                progress.recent_scores_translate = progress.recent_scores_translate[1:] if len(progress.recent_scores_translate) > 0 else []
+                progress.is_mastered_repeat = False
+                progress.is_mastered_translate = False
+                progress.save()
+
+
+
 
 
 class UserProgress(models.Model):

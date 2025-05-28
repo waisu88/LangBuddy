@@ -1,0 +1,11 @@
+{
+  "category": "Pogoda",
+  "level": "B1",
+  "sentences": [
+    {"pl": "Pamiętaj, aby podczas burzy nie stać pod drzewem.", "hr": "Zapamti da za vrijeme oluje ne stojiš ispod drveta."},
+    {"pl": "Wczoraj widzieliśmy niesamowitą tęczę po burzy.", "hr": "Jučer smo vidjeli nevjerojatnu dugu nakon oluje."},
+    {"pl": "Pod koniec dnia temperatura zaczęła gwałtownie spadać.", "hr": "Na kraju dana temperatura je počela naglo padati."},
+    {"pl": "Nawet jeśli będzie pochmurno, warto iść na spacer.", "hr": "Čak i ako bude oblačno, vrijedi otići u šetnju."},
+    {"pl": "Czy zmieniająca się pogoda wpływa na twoje samopoczucie?", "hr": "Utječe li promjena vremena na tvoje raspoloženje?"}
+  ]
+}

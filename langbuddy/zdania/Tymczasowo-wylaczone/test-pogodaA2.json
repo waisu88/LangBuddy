@@ -1,0 +1,11 @@
+{
+  "category": "Pogoda",
+  "level": "A2",
+  "sentences": [
+    {"pl": "Zimą często pada śnieg.", "hr": "Zimi često pada snijeg."},
+    {"pl": "W maju często pada deszcz.", "hr": "U svibnju često pada kiša."},
+    {"pl": "Niebo jest dziś bezchmurne.", "hr": "Danas je nebo bez oblaka."},
+    {"pl": "W nocy może spaść lekki deszcz.", "hr": "Noću može pasti lagana kiša."},
+    {"pl": "Jeśli zacznie padać, schowaj się pod drzewem.", "hr": "Ako počne padati kiša, skloni se pod stablo."}
+  ]
+}

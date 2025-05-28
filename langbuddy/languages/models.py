@@ -36,7 +36,7 @@ class Sentence(models.Model):
     
 
 class Translation(models.Model):
-    sentence = models.ForeignKey(Sentence, on_delete=models.DO_NOTHING, related_name='translations')
+    sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='translations')
     language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)  # Język docelowy
     content = models.TextField()  # Przetłumaczone zdanie
     is_verified = models.BooleanField(default=True)  # Czy tłumaczenie zostało zweryfikowane

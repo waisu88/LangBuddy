@@ -1,0 +1,11 @@
+{
+  "category": "Jedzenie i napoje",
+  "level": "B1",
+  "sentences": [
+    {"pl": "Co zawiera ta sałatka?", "hr": "Što sadrži ova salata?"},
+    {"pl": "Czy macie ofertę dla dzieci?", "hr": "Imate li ponudu za djecu?"},
+    {"pl": "Proszę o drugie danie z rybą.", "hr": "Molim te, drugo jelo s ribom."},
+    {"pl": "Czy to danie jest bardzo ostre?", "hr": "Je li ovo jelo jako ljuto?"},
+    {"pl": "Zamówię sałatkę z pomidorami i oliwkami.", "hr": "Naručit ću salatu s rajčicama i maslinama."}
+  ]
+}

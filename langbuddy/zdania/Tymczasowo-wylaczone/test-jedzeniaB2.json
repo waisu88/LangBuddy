@@ -1,0 +1,11 @@
+{
+  "category": "Jedzenie i napoje",
+  "level": "B2",
+  "sentences": [
+    {"pl": "Czy mogę zamówić coś bezglutenowego, ponieważ mam nietolerancję?", "hr": "Mogu li naručiti nešto bezglutensko jer imam netoleranciju?"},
+    {"pl": "W tym regionie często je się dania mięsne, szczególnie jagnięcinę.", "hr": "U ovoj regiji često se jedu mesna jela, osobito janjetina."},
+    {"pl": "Czy mogę prosić o więcej oliwy z oliwek do tej sałatki?", "hr": "Mogu li moliti više maslinovog ulja za ovu salatu?"},
+    {"pl": "Macie w ofercie jakieś dania na bazie ryb?", "hr": "Imate li u ponudi jela na bazi ribe?"},
+    {"pl": "Czy oferujecie dania odpowiednie dla osób na diecie wegetariańskiej?", "hr": "Nudite li jela pogodna za osobe na vegetarijanskoj dijeti?"}
+  ]
+}

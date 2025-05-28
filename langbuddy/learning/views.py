@@ -1,8 +1,9 @@
 from django.db import models
-from django.db.models import OuterRef, Subquery, IntegerField, Exists, Value as V
+from django.db.models import OuterRef, Subquery, IntegerField, Exists, Value as V, Q
 from django.db.models.functions import Coalesce
 from .models import UserProgress, UserCategoryPreference, UserSentenceProgress
 from languages.models import Sentence
+
 
 def choose_sentence(user, mode="repeat"):
     # 1. Globalny poziom użytkownika
@@ -15,47 +16,75 @@ def choose_sentence(user, mode="repeat"):
         user=user,
         is_active=True
     ).values_list('category_id', flat=True)
+    # 2b. Mapowanie kategorii na poziomy z UserCategoryProgress
+    user_category_progress = UserCategoryProgress.objects.filter(
+        user=user,
+        category_id__in=preferred_categories
+    ).values_list('category_id', 'level')
 
-    # 3. Bazowy queryset zdań
-    if not preferred_categories:
+    category_level_map = {cat_id: lvl for cat_id, lvl in user_category_progress}
+
+    # 3. Budowa querysetu bazowego
+    if not category_level_map:
+        # fallback do globalnego poziomu
         base_sentences = Sentence.objects.filter(level=level)
     else:
-        base_sentences = Sentence.objects.filter(
-            level=level,
-            category_id__in=preferred_categories
-        )
-
+        category_filters = Q()
+        for cat_id, lvl in category_level_map.items():
+            category_filters |= Q(category_id=cat_id, level=lvl)
+        base_sentences = Sentence.objects.filter(category_filters)
     # 4. Wykluczenie opanowanych zdań (is_mastered=True)
     mastered_subquery = UserSentenceProgress.objects.filter(
         user=user,
-        sentence=OuterRef('pk'),
-        is_mastered=True
+        sentence_id=OuterRef('pk'),
+        is_mastered_translate=True
     )
     base_sentences = base_sentences.annotate(
         is_mastered=Exists(mastered_subquery)
     ).filter(is_mastered=False)
 
-    # 4b. Dodatkowe filtrowanie dla trybu "translate" → tylko te, które były już powtarzane
+    # 4b. W trybie "translate" tylko zdania opanowane w repeat
     if mode == "translate":
         repeated_subquery = UserSentenceProgress.objects.filter(
             user=user,
-            sentence=OuterRef('pk'),
-            repeat_attempts__gt=0
+            sentence_id=OuterRef('pk'),
+            is_mastered_repeat=True
         )
         base_sentences = base_sentences.annotate(
-            was_repeated=Exists(repeated_subquery)
-        ).filter(was_repeated=True)
+            was_mastered_in_repeat=Exists(repeated_subquery)
+        ).filter(was_mastered_in_repeat=True)
+
+    # 4c Wyklucz zdania opanowane (dla konkretnego trybu)
+    if mode == "repeat":
+        filter_mastered = UserSentenceProgress.objects.filter(
+            user=user,
+            sentence_id=OuterRef('pk'),
+            is_mastered_repeat=True
+        )
+    elif mode == "translate":
+        filter_mastered = UserSentenceProgress.objects.filter(
+            user=user,
+            sentence_id=OuterRef('pk'),
+            is_mastered_translate=True
+        )
+
+    base_sentences = base_sentences.annotate(
+        is_mastered=Exists(filter_mastered)
+    ).filter(is_mastered=False)
+
 
     # 5. Annotacja liczby prób
+
+
     if mode == "repeat":
         progress_subquery = UserSentenceProgress.objects.filter(
             user=user,
-            sentence=OuterRef('pk')
+            sentence_id=OuterRef('pk')
         ).values('repeat_attempts')[:1]
     elif mode == "translate":
         progress_subquery = UserSentenceProgress.objects.filter(
             user=user,
-            sentence=OuterRef('pk')
+            sentence_id=OuterRef('pk')
         ).values('translate_attempts')[:1]
     else:
         progress_subquery = UserSentenceProgress.objects.none().values('repeat_attempts')
@@ -66,6 +95,8 @@ def choose_sentence(user, mode="repeat"):
 
     # 6. Sortowanie i wybór zdania
     sentence = annotated.order_by('attempts', '?').first()
+    print(sentence.level)
+    print(sentence.category.name)
     return sentence
 
 
@@ -166,8 +197,8 @@ def check_answer(request):
         
         mode = request.POST.get('mode')
     
-        # Jeśli wynik > 50%, uznajemy odpowiedź za poprawną
-        if score > 50:
+        # Jeśli wynik > 40%, uznajemy odpowiedź za poprawną
+        if score > 40:
             update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
         else:
             score = "Niepoprawna transkrypcja, powtórz nagranie"
@@ -256,19 +287,19 @@ def update_sentence_progress(user, sentence, mode, score):
         sentence__language=language
     )
 
-    # ⬇️ Oblicz średni similarity score
-    average_similarity = all_progress.aggregate(avg=models.Avg('last_similarity_score'))['avg'] or 0.0
+    # # ⬇️ Oblicz średni similarity score
+    # average_similarity = all_progress.aggregate(avg=models.Avg('last_similarity_score'))['avg'] or 0.0
 
-    # ⬇️ Poziomy CEFR
-    CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-    current_index = CEFR_LEVELS.index(category_progress.level)
+    # # ⬇️ Poziomy CEFR
+    # CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    # current_index = CEFR_LEVELS.index(category_progress.level)
 
-    # ⬇️ Reguły zmiany poziomu
-    if average_similarity >= 0.8 and current_index < len(CEFR_LEVELS) - 1:
-        category_progress.level = CEFR_LEVELS[current_index + 1]
-    elif average_similarity < 0.4 and current_index > 0:
-        category_progress.level = CEFR_LEVELS[current_index - 1]
-    # else: poziom pozostaje bez zmian
+    # # ⬇️ Reguły zmiany poziomu
+    # if average_similarity >= 0.8 and current_index < len(CEFR_LEVELS) - 1:
+    #     category_progress.level = CEFR_LEVELS[current_index + 1]
+    # elif average_similarity < 0.4 and current_index > 0:
+    #     category_progress.level = CEFR_LEVELS[current_index - 1]
+    # # else: poziom pozostaje bez zmian
 
     category_progress.save()
 
@@ -286,7 +317,7 @@ def update_sentence_progress(user, sentence, mode, score):
     # ⬇️ Zwrotka, jeśli potrzebujesz do API
     return {
         "status": "updated",
-        "is_mastered": progress.is_mastered,
+        "is_mastered": progress.is_mastered_translate,
         "accuracy": progress.accuracy()
     }
 

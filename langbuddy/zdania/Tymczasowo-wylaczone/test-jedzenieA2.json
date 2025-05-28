@@ -1,0 +1,11 @@
+{
+  "category": "Jedzenie i napoje",
+  "level": "A2",
+  "sentences": [
+    {"pl": "Co zamówimy na obiad?", "hr": "Što ćemo naručiti za ručak?"},
+    {"pl": "Proszę o sałatkę z kurczakiem.", "hr": "Molim te, salatu s piletinom."},
+    {"pl": "Macie dania bezglutenowe?", "hr": "Imate li bezglutenska jela?"},
+    {"pl": "Jaki deser polecasz?", "hr": "Koji desert preporučuješ?"},
+    {"pl": "Jakie są najlepsze wina chorwackie?", "hr": "Koja su najbolja hrvatska vina?"}
+  ]
+}
