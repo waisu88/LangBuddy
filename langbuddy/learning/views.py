@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import OuterRef, Subquery, IntegerField, Exists, Value as V, Q
+from django.db.models import OuterRef, Subquery, IntegerField, Exists, Value as V, Q, Min
 from django.db.models.functions import Coalesce
 from .models import UserProgress, UserCategoryPreference, UserSentenceProgress
 from languages.models import Sentence
@@ -94,9 +94,11 @@ def choose_sentence(user, mode="repeat"):
     )
 
     # 6. Sortowanie i wybór zdania
-    sentence = annotated.order_by('attempts', '?').first()
-    print(sentence.level)
-    print(sentence.category.name)
+    # Dla poniższego podejscia zauwazyłem brak losowości pomiędzy kategoriami, próbuję sugestii chatuGPT
+    # sentence = annotated.order_by('attempts', '?').first() 
+    min_attempts = annotated.aggregate(min_attempts=Min('attempts'))['min_attempts']
+    least_attempted = annotated.filter(attempts=min_attempts)
+    sentence = least_attempted.order_by('?').first()
     return sentence
 
 
