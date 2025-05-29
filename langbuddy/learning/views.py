@@ -34,25 +34,26 @@ def choose_sentence(user, mode="repeat"):
             category_filters |= Q(category_id=cat_id, level=lvl)
         base_sentences = Sentence.objects.filter(category_filters)
     # 4. Wykluczenie opanowanych zdań (is_mastered=True)
-    mastered_subquery = UserSentenceProgress.objects.filter(
-        user=user,
-        sentence_id=OuterRef('pk'),
-        is_mastered_translate=True
-    )
-    base_sentences = base_sentences.annotate(
-        is_mastered=Exists(mastered_subquery)
-    ).filter(is_mastered=False)
+    # mastered_subquery = UserSentenceProgress.objects.filter(
+    #     user=user,
+    #     sentence_id=OuterRef('pk'),
+    #     is_mastered_translate=True
+    # )
+    # base_sentences = base_sentences.annotate(
+    #     is_mastered=Exists(mastered_subquery)
+    # ).filter(is_mastered=False)
 
     # 4b. W trybie "translate" tylko zdania opanowane w repeat
     if mode == "translate":
         repeated_subquery = UserSentenceProgress.objects.filter(
             user=user,
             sentence_id=OuterRef('pk'),
-            is_mastered_repeat=True
+            correct_attempts_repeat__gte=1
         )
+        # Przynajmniej raz dobrze powtórzone
         base_sentences = base_sentences.annotate(
-            was_mastered_in_repeat=Exists(repeated_subquery)
-        ).filter(was_mastered_in_repeat=True)
+            was_repeated_once=Exists(repeated_subquery)
+        ).filter(was_repeated_once=True)
 
     # 4c Wyklucz zdania opanowane (dla konkretnego trybu)
     if mode == "repeat":
