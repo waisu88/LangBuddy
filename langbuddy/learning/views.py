@@ -17,12 +17,17 @@ def choose_sentence(user, mode="repeat"):
         is_active=True
     ).values_list('category_id', flat=True)
     # 2b. Mapowanie kategorii na poziomy z UserCategoryProgress
-    user_category_progress = UserCategoryProgress.objects.filter(
-        user=user,
-        category_id__in=preferred_categories
-    ).values_list('category_id', 'level')
+    # Dla każdej preferowanej kategorii próbujemy pobrać poziom z UserCategoryProgress,
+    # a jeśli nie istnieje – używamy globalnego poziomu użytkownika
+    user_category_progress = {
+        ucp.category_id: ucp.level
+        for ucp in UserCategoryProgress.objects.filter(user=user, category_id__in=preferred_categories)
+    }
 
-    category_level_map = {cat_id: lvl for cat_id, lvl in user_category_progress}
+    category_level_map = {
+        cat_id: user_category_progress.get(cat_id, level)  # fallback do globalnego poziomu
+        for cat_id in preferred_categories
+    }
 
     # 3. Budowa querysetu bazowego
     if not category_level_map:
@@ -96,10 +101,10 @@ def choose_sentence(user, mode="repeat"):
 
     # 6. Sortowanie i wybór zdania
     # Dla poniższego podejscia zauwazyłem brak losowości pomiędzy kategoriami, próbuję sugestii chatuGPT
-    # sentence = annotated.order_by('attempts', '?').first() 
-    min_attempts = annotated.aggregate(min_attempts=Min('attempts'))['min_attempts']
-    least_attempted = annotated.filter(attempts=min_attempts)
-    sentence = least_attempted.order_by('?').first()
+    sentence = annotated.order_by('attempts', '?').first() 
+    # min_attempts = annotated.aggregate(min_attempts=Min('attempts'))['min_attempts']
+    # least_attempted = annotated.filter(attempts=min_attempts)
+    # sentence = least_attempted.order_by('?').first()
     return sentence
 
 
