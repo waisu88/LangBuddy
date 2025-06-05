@@ -269,12 +269,16 @@ def conversation_respond(request):
         messages += request.session['chat_history']
         print(request.session['chat_history'])
 
-        odpowiedz_ai = g4f.ChatCompletion.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens=40  
-
-        )
+        try:
+            odpowiedz_ai = g4f.ChatCompletion.create(
+                model="gpt-4",
+                messages=messages,
+                max_tokens=40,
+            )
+        except Exception as e:
+            print("❌ Błąd w g4f.ChatCompletion:", str(e))
+            odpowiedz_ai = None
+        print(odpowiedz_ai)
 
         # **Zapisujemy odpowiedź AI w historii**
         request.session['chat_history'].append({"role": "assistant", "content": odpowiedz_ai})
