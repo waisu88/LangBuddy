@@ -178,9 +178,14 @@
         document.getElementById("retryButton").addEventListener("click", () => {
             if (mediaRecorder && isRecording) {
                 cancelled = true; // anuluj nagranie
-                audioChunks = [];
                 mediaRecorder.stop();
+                audioChunks = [];
                 isRecording = false;
+
+                // Zresetuj UI
+                document.getElementById("recordButton").textContent = "Start";
+                document.getElementById("recordButton").disabled = false;
+                document.getElementById("retryButton").style.display = "none";
             }
         });
     </script>
