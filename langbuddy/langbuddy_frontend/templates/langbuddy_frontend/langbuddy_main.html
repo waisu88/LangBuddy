@@ -10,6 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+
+    <!-- Przekazanie zmiennych z backendu do JS -->
+    <script>
+      window.currentMode = "{{ current_mode|default:'' }}";
+      window.currentSentenceId = "{{ current_sentence_id|default:'' }}";
+    </script>
 </head>
 <body>
     <div class="container">
@@ -25,8 +31,14 @@
             {% endif %}
             {% block content_login %}{% endblock content_login %}
         </div>
-        {% block content_start_audio %}{% endblock content_start_audio %}
+
         {% block content_show_sentence %}{% endblock content_show_sentence %}
+        {% block content_start_audio %}
+            {% if request.path == "/conversation/" %}
+                <h2>Tryb: Rozmowa z AI</h2>
+                <audio id="aiAudio" controls autoplay></audio>
+            {% endif %}
+        {% endblock %}
         <div class="start-retry">
             <button id="recordButton" class="record-btn">Start</button>
             <button id="retryButton" class="record-btn gray" style="display: none;">🔁 Spróbuj jeszcze raz</button>    
@@ -47,7 +59,7 @@
             </div>
         </div>
 
-        <button id="nextButton">Next</button>
+        <button id="nextButton" style="display:none;">Next</button>
         <div class="nav-buttons">
             <a href="/" class="btn nav-btn red">🏠 Menu główne</a>
             <a href="/choose-categories-view/" class="btn nav-btn blue">📚 Wybierz kategorie</a>
@@ -60,6 +72,20 @@
         let audioChunks = [];
         let isRecording = false;
         let cancelled = false;
+
+        // Jeśli jesteśmy w trybie "conversation", pobierz pierwsze audio i komunikat AI
+        if (window.currentMode === "conversation") {
+          fetch("/api/learning/conversation/start/")
+            .then(res => res.json())
+            .then(data => {
+              const aiAudio = document.getElementById("aiAudio");
+              if (aiAudio && data.audio_url) {
+                aiAudio.src = data.audio_url;
+                aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
+              }
+              console.log("AI:", data.message);
+            });
+        }
 
         document.getElementById("recordButton").addEventListener("click", async () => {
             if (isRecording) {
@@ -79,11 +105,8 @@
 
                 mediaRecorder.onstop = async () => {
                     if (cancelled) {
-                        // 👇 Odrzucamy próbkę, resetujemy tylko UI
                         console.log("Nagranie anulowane — brak wysyłki.");
-                        document.getElementById("recordButton").textContent = "Start";
                         document.getElementById("recordButton").disabled = false;
-                        document.getElementById("retryButton").style.display = "none";
                         return;
                     }
 
@@ -94,27 +117,46 @@
                     document.getElementById("recordButton").textContent = "Przetwarzanie";
                     document.getElementById("recordButton").disabled = true;
 
-                    if (window.currentSentenceId) formData.append("sentence_id", window.currentSentenceId);
-                    if (window.currentMode) formData.append("mode", window.currentMode);
+                    let url;
+                    if (window.currentMode === "conversation") {
+                        url = "/api/learning/conversation/respond/";
+                    } else {
+                        url = "/api/learning/check_answer/";
+                        if (window.currentSentenceId) formData.append("sentence_id", window.currentSentenceId);
+                        if (window.currentMode) formData.append("mode", window.currentMode);
+                    }
 
-                    let response = await fetch("/api/learning/check_answer/", {
+                    let response = await fetch(url, {
                         method: "POST",
                         body: formData,
                     });
 
+                    if (!response.ok) {
+                        alert("Błąd serwera: " + response.status);
+                        document.getElementById("recordButton").textContent = "Start";
+                        document.getElementById("recordButton").disabled = false;
+                        return;
+                    }
+
                     let data = await response.json();
                     console.log("Odpowiedź z serwera:", data);
 
-                    document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
-                    document.getElementById("translation").textContent = data.translation || "Brak tłumaczenia";
-                    const score = data.levenshtein_score;
-
-                    if (typeof score === "number") {
-                        document.getElementById("lev_score").textContent = `${Math.round(score)}%`;
+                    if (window.currentMode !== "conversation") {
+                        document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
+                        document.getElementById("translation").textContent = data.translation || "Brak tłumaczenia";
+                        const score = data.levenshtein_score;
+                        document.getElementById("lev_score").textContent = (typeof score === "number") ? `${Math.round(score)}%` : (score || "Brak wyniku");
                     } else {
-                        document.getElementById("lev_score").textContent = score || "Brak wyniku";
+                        console.log("AI mówi:", data.odpowiedz_ai || data.message);
                     }
 
+                    if (data.audio_url) {
+                        const aiAudio = document.getElementById("aiAudio");
+                        if (aiAudio) {
+                            aiAudio.src = data.audio_url;
+                            aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
+                        }
+                    }
 
                     document.getElementById("recordButton").textContent = "Start";
                     document.getElementById("recordButton").disabled = false;
@@ -126,17 +168,18 @@
                 document.getElementById("recordButton").textContent = "Stop";
                 document.getElementById("retryButton").style.display = "inline-block";
             }
-
             isRecording = !isRecording;
         });
+
         document.getElementById("nextButton").addEventListener("click", () => {
-            location.reload(); // lub inna logika np. załaduj nowe zdanie AJAX-em
+            location.reload(); // lub AJAX do załadowania nowego zdania
         });
+
         document.getElementById("retryButton").addEventListener("click", () => {
             if (mediaRecorder && isRecording) {
-                cancelled = true; // 🟥 oznacz anulowanie
-                audioChunks = []; // 🧹 wyczyść
-                mediaRecorder.stop(); // wywoła `onstop`, ale nic nie wyśle
+                cancelled = true; // anuluj nagranie
+                audioChunks = [];
+                mediaRecorder.stop();
                 isRecording = false;
             }
         });

@@ -174,6 +174,132 @@ def translate(request):
         }
     })
 
+from django.views.decorators.csrf import csrf_exempt
+from gtts import gTTS
+from io import BytesIO
+from googletrans import Translator
+
+@csrf_exempt
+@login_required
+def conversation_start(request):
+    # Ustawienie początkowej historii
+    ai_message = "Hi, how are You? What topic would You like to talk on?"
+
+
+   
+
+    # request.session['chat_history'] = [
+    #     {"role": "system", "content": (
+    #         "Dobar dan, sta ima?",
+    #     )},
+    #     # {"role": "assistant", "content": "Cześć! Jak się dziś czujesz? 😊"}  # Można dynamicznie
+    # ]
+    # ai_response = request.session['chat_history'][-1]["content"]
+    lang = request.user.profile.target_language
+
+    translator = Translator()
+    try:
+        translation_result = translator.translate(ai_message, src="en", dest=lang)
+        translated = translation_result.text
+    except Exception as e:
+        translated = "Błąd tłumaczenia."
+    
+    request.session['chat_history'] = [
+        {"role": "system", "content": (
+            "You are a native speaker of " + lang + 
+            ". Talk only in that language. Your messages are short (max 15 words), helpful, "
+            "correct user grammar subtly, and suggest related vocabulary. Keep the conversation flowing. Always set a question on the end."
+        )},
+        {"role": "assistant", "content": translated}  # Można dynamicznie
+    ]
+    # Konwersja do audio
+    ai_response = request.session['chat_history'][-1]["content"]
+    print(request.session['chat_history'])
+    lang = request.user.profile.target_language
+    tts = gTTS(text=ai_response, lang=lang)
+    tts_io = BytesIO()
+    tts.write_to_fp(tts_io)
+    tts_io.seek(0)
+
+    audio_path = os.path.join(settings.MEDIA_ROOT, "response.mp3")
+    with open(audio_path, "wb") as f:
+        f.write(tts_io.read())
+    audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
+
+    return JsonResponse({
+        "mode": "conversation",
+        "audio_url": audio_url,
+        "message": ai_response
+    })
+
+
+import g4f  
+
+@csrf_exempt
+@login_required
+def conversation_respond(request):
+    if request.method == 'POST' and request.FILES.get('audio'):
+        audio_file = request.FILES['audio']
+        user = request.user
+        lang = user.profile.target_language
+        user_id = user.id
+
+        file_path = f"/tmp/whisper/audio_{user_id}.wav"
+        with open(file_path, "wb") as f:
+            for chunk in audio_file.chunks():
+                f.write(chunk)
+
+        transcription = transcribe_audio(file_path, lang)
+        os.remove(file_path)
+
+        # Historia rozmowy z sesji
+        if 'chat_history' not in request.session:
+            request.session['chat_history'] = []
+
+        request.session['chat_history'].append({"role": "user", "content": transcription})
+
+        request.session['chat_history'] = request.session['chat_history'][-10:]
+        # **Tworzymy prompt do AI**
+        
+        messages = [{"role": "system", "content": f"You are a native speaker of {lang}. \
+                  You answer only in {lang}. Correct mistakes in a subtle way, \
+                  but also respond as in a conversation. Your response MUST be short \
+                  (maximum 15 words). Be very concise. Keep the conversation going and suggest new words \
+                  related to the topic."}]
+        messages += request.session['chat_history']
+
+
+        odpowiedz_ai = g4f.ChatCompletion.create(
+            model="gpt-4",
+            messages=messages,
+            max_tokens=40  
+
+        )
+
+        # **Zapisujemy odpowiedź AI w historii**
+        request.session['chat_history'].append({"role": "assistant", "content": odpowiedz_ai})
+        request.session.modified = True  # Zapisujemy zmiany w sesji
+
+        tts = gTTS(text=odpowiedz_ai, lang=lang)
+        tts_io = BytesIO()
+        tts.write_to_fp(tts_io)
+        tts_io.seek(0)
+
+        audio_path = os.path.join(settings.MEDIA_ROOT, "response.mp3")
+        with open(audio_path, "wb") as f:
+            f.write(tts_io.read())
+        audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
+
+        return JsonResponse({
+            "transkrypcja": transcription,
+            "odpowiedz_ai": odpowiedz_ai,
+            "audio_url": audio_url
+        })
+
+    return JsonResponse({'error': 'Błędne żądanie'}, status=400)
+
+
+
 
 from learning.models import UserProgress
 from languages.models import Sentence

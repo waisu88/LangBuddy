@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import main_view, repeat_view, translate_view, choose_categories_view, progress_view, register_view
+from .views import main_view, repeat_view, translate_view, choose_categories_view, progress_view, register_view, conversation_ai_view
 from django.contrib.auth.views import LoginView, LogoutView
 
 urlpatterns = [
@@ -12,4 +12,6 @@ urlpatterns = [
 
     path('login/', LoginView.as_view(template_name="langbuddy_login.html"), name='login'),
     path('register/', register_view, name='register'),
+
+    path("conversation/", conversation_ai_view, name='conversation-view'),
 ]

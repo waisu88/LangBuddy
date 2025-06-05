@@ -1,0 +1,10 @@
+{% extends "langbuddy_main.html" %}
+
+{% block content_start_audio %}
+<h2>Tryb: Rozmowa z AI</h2>
+
+<audio id="aiAudio" controls autoplay></audio>
+<script>
+    window.currentMode = "conversation";
+</script>
+{% endblock %}

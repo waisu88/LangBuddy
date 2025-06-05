@@ -21,6 +21,10 @@ def progress_view(request):
     return render(request, 'progress_view.html')
 
 
+def conversation_ai_view(request):
+    return render(request, 'conversation.html')
+
+
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect
 from authorization.models import Profile
