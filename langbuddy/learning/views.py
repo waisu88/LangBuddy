@@ -214,7 +214,7 @@ def conversation_start(request):
     ]
     # Konwersja do audio
     ai_response = request.session['chat_history'][-1]["content"]
-    print(request.session['chat_history'])
+
     lang = request.user.profile.target_language
     tts = gTTS(text=ai_response, lang=lang)
     tts_io = BytesIO()
@@ -267,7 +267,7 @@ def conversation_respond(request):
                   (maximum 15 words). Be very concise. Keep the conversation going and suggest new words \
                   related to the topic."}]
         messages += request.session['chat_history']
-        print(request.session['chat_history'])
+ 
 
         try:
             odpowiedz_ai = g4f.ChatCompletion.create(
@@ -276,9 +276,8 @@ def conversation_respond(request):
                 max_tokens=40,
             )
         except Exception as e:
-            print("❌ Błąd w g4f.ChatCompletion:", str(e))
             odpowiedz_ai = None
-        print(odpowiedz_ai)
+
 
         # **Zapisujemy odpowiedź AI w historii**
         request.session['chat_history'].append({"role": "assistant", "content": odpowiedz_ai})
