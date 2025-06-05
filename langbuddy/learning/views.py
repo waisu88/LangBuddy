@@ -267,7 +267,7 @@ def conversation_respond(request):
                   (maximum 15 words). Be very concise. Keep the conversation going and suggest new words \
                   related to the topic."}]
         messages += request.session['chat_history']
-
+        print(request.session['chat_history'])
 
         odpowiedz_ai = g4f.ChatCompletion.create(
             model="gpt-4",
