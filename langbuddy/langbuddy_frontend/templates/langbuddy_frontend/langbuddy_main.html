@@ -153,7 +153,7 @@
                     if (data.audio_url) {
                         const aiAudio = document.getElementById("aiAudio");
                         if (aiAudio) {
-                            audioPlayer.src = data.audio_url + '?t=' + new Date().getTime();
+                            aiAudio.src = data.audio_url + '?t=' + new Date().getTime();
                             aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
                         }
                     }
