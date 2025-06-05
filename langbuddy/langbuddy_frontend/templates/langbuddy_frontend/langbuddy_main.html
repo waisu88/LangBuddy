@@ -80,7 +80,7 @@
             .then(data => {
               const aiAudio = document.getElementById("aiAudio");
               if (aiAudio && data.audio_url) {
-                aiAudio.src = data.audio_url;
+                audioPlayer.src = data.audio_url + '?t=' + new Date().getTime();
                 aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
               }
               console.log("AI:", data.message);
