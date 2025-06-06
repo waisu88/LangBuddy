@@ -218,6 +218,9 @@ def conversation_start(request):
     ai_response = request.session['chat_history'][-1]["content"]
 
     lang = request.user.profile.target_language
+    if lang == "sl":
+        lang = "hr"
+
     tts = gTTS(text=ai_response, lang=lang)
     tts_io = BytesIO()
     tts.write_to_fp(tts_io)
@@ -284,7 +287,8 @@ def conversation_respond(request):
         # **Zapisujemy odpowiedź AI w historii**
         request.session['chat_history'].append({"role": "assistant", "content": odpowiedz_ai})
         request.session.modified = True  # Zapisujemy zmiany w sesji
-
+        if lang == "sl":
+            lang = "hr"
         tts = gTTS(text=odpowiedz_ai, lang=lang)
         tts_io = BytesIO()
         tts.write_to_fp(tts_io)
