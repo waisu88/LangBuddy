@@ -133,7 +133,9 @@ def repeat(request):
         return JsonResponse({'error': 'Brak tłumaczenia'}, status=404)
     
     
-
+    if lang == "sl":
+        lang = "hr" # Brak wsparcia od Google TTS dla języka Słoweńskiego, Inne TTS brzmią robotycznie
+        
     tts = gTTS(text=translation.content, lang=lang)
     tts_io = BytesIO()
     tts.write_to_fp(tts_io)

@@ -113,7 +113,7 @@ class UserCategoryProgress(models.Model):
         if total == 0:
             return
 
-        if attempted / total >= 0.7 and mastered / attempted >= 0.75:
+        if attempted / total >= 0.5 and mastered / attempted >= 0.75:
             levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
             current_idx = levels.index(self.level)
             if current_idx < len(levels) - 1:
