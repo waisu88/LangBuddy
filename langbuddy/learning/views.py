@@ -128,14 +128,19 @@ def repeat(request):
     if not sentence:
         return JsonResponse({'error': 'Brak dostępnych zdań'}, status=404)
     lang = user.profile.target_language
-    translation = sentence.translations.filter(language__code=lang).first()
+    if lang == "pl":
+        lang == user.profile.native_language
+        translation = sentence
+    else:
+        translation = sentence.translations.filter(language__code=lang).first()
+    
     if not translation:
         return JsonResponse({'error': 'Brak tłumaczenia'}, status=404)
     
     
     if lang == "sl":
         lang = "hr" # Brak wsparcia od Google TTS dla języka Słoweńskiego, Inne TTS brzmią robotycznie
-        
+    print(translation)
     tts = gTTS(text=translation.content, lang=lang)
     tts_io = BytesIO()
     tts.write_to_fp(tts_io)
@@ -146,13 +151,19 @@ def repeat(request):
         f.write(tts_io.read())
 
     audio_url = os.path.join(settings.MEDIA_URL, "response.mp3")
+    if lang != "pl":
+        translation_obj = sentence
+    else:
+        translation_obj = sentence.translations.filter(language__code=user.profile.native_language).first()
+    
+
 
     return JsonResponse({
         'mode': 'repeat',
         'audio_url': audio_url,
         'sentence': {
             'id': sentence.id,
-            'content': sentence.content,
+            'content': translation_obj.content if translation_obj else "Brak tłumaczenia",
             'level': sentence.level,
             'category': sentence.category.name if sentence.category else None
         }
@@ -165,12 +176,17 @@ def translate(request):
     
     if not sentence:
         return JsonResponse({'error': 'Brak dostępnych zdań'}, status=404)
+    lang = user.profile.target_language
+    if lang != "pl":
+        translation_obj = sentence
+    else:
+        translation_obj = sentence.translations.filter(language__code=user.profile.native_language).first()
 
     return JsonResponse({
         "mode": "translate",
         "sentence": {
             "id": sentence.id,
-            "content": sentence.content,
+            "content": translation_obj.content if translation_obj else "Brak tłumaczenia",
             "level": sentence.level,
             "category": sentence.category.name if sentence.category else None
         }
@@ -189,14 +205,6 @@ def conversation_start(request):
 
 
    
-
-    # request.session['chat_history'] = [
-    #     {"role": "system", "content": (
-    #         "Dobar dan, sta ima?",
-    #     )},
-    #     # {"role": "assistant", "content": "Cześć! Jak się dziś czujesz? 😊"}  # Można dynamicznie
-    # ]
-    # ai_response = request.session['chat_history'][-1]["content"]
     lang = request.user.profile.target_language
 
     translator = Translator()
@@ -333,7 +341,10 @@ def check_answer(request):
             return JsonResponse({'error': 'Nie znaleziono zdania'}, status=404)
         user = request.user
         lang = user.profile.target_language
-        translation = sentence.translations.filter(language__code=lang).first().content
+        if lang != "pl":
+            translation = sentence.translations.filter(language__code=lang).first().content
+        else:
+            translation = sentence.content
 
         score = calculate_similarity(transcription, translation)
 
@@ -345,9 +356,12 @@ def check_answer(request):
             update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
         else:
             score = "Niepoprawna transkrypcja, powtórz nagranie"
+        translation_obj = sentence.translations.filter(language__code=user.profile.target_language).first()
+        content_text = sentence.content if user.profile.target_language == "pl" else (translation_obj.content if translation_obj else "Brak tłumaczenia")
+
         return JsonResponse({
             'transkrypcja': transcription,
-            'sentence': sentence.content,
+            'sentence': content_text,
             'translation': translation,
             'levenshtein_score': score
         })
@@ -366,6 +380,7 @@ def upload_audio(request):
     user = request.user
     user_id = user.id if user.is_authenticated else "anon"
     lang = user.profile.target_language
+
     # Plik o nazwie zależnej od użytkownika
     file_name = f"audio_{user_id}.wav"
     file_path = os.path.join(WHISPER_AUDIO_DIR, file_name)
