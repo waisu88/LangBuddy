@@ -274,14 +274,19 @@ def conversation_respond(request):
         request.session['chat_history'] = request.session['chat_history'][-10:]
         # **Tworzymy prompt do AI**
         
-        messages = [{"role": "system", "content": f"You are a native speaker of {lang}. \
-                  You answer only in {lang}. Correct mistakes in a subtle way, \
-                  but also respond as in a conversation. Your response MUST be short \
-                  (maximum 15 words). Be very concise. Keep the conversation going and suggest new words \
-                  related to the topic."}]
-        messages += request.session['chat_history']
- 
+        SYSTEM_PROMPT = {
+            "role": "system",
+            "content": "You are a native speaker of {lang}. You answer only in {lang}. "
+                    "Correct mistakes in a subtle way, but also respond as in a conversation. "
+                    "Your response MUST be short (maximum 15 words). Be very concise. "
+                    "Keep the conversation going and suggest new words related to the topic."
+        }
 
+        system_message = SYSTEM_PROMPT.copy()
+        system_message["content"] = system_message["content"].format(lang=lang)
+
+        messages = [system_message] + request.session['chat_history']
+        
         try:
             odpowiedz_ai = g4f.ChatCompletion.create(
                 model="gpt-4",
