@@ -20,6 +20,7 @@
 <body>
     <div class="container">
         <div class="top-nav">
+            <a href="/" class="btn nav-btn gray">🏠 Menu główne</a>
             {% if user.is_authenticated %}
                 <span class="welcome-text">Witaj, {{ user.username }}!</span>
                 <form method="post" action="{% url 'logout' %}">
@@ -46,7 +47,7 @@
         
         <div id="outputBlock">
             <div class="transcription">
-                <b>Twoja transkrypcja:</b>
+                <b>Transkrypcja:</b>
                 <span id="transkrypcja"></span>
             </div>
             <div class="translation">
@@ -55,17 +56,31 @@
             </div>
             <div class="accuracy">
                 <b>Dokładność:</b>
-                <span id="lev_score"></span>
+                <div id="lev_score_bar_container" style="width: 50%; height: 20px; background-color: #ddd; border-radius: 5px; margin-top: 4px;">
+                    <div id="lev_score_bar" style="
+                        height: 100%;
+                        width: 0%;
+                        background-color: gray;
+                        border-radius: 5px;
+                        transition: width 0.5s ease, background-color 0.5s ease;
+                    "></div>
+                </div>
+                <span id="lev_score_text"></span>
             </div>
         </div>
 
-        <button id="nextButton" style="display:none;">Next</button>
+        <button id="nextButton" style="display:none;">Następne zdanie</button>
         <div class="nav-buttons">
-            <a href="/" class="btn nav-btn red">🏠 Menu główne</a>
-            <a href="/choose-categories-view/" class="btn nav-btn blue">📚 Wybierz kategorie</a>
-            <button type="button" onclick="location.reload()" class="btn nav-btn gray">🔄 Wybierz inne zdanie</button>
+            <a href="/choose-categories-view/" id="chooseCategoriesBtn" class="btn nav-btn blue">📚 Wybierz kategorie</a>
+            <button type="button" onclick="location.reload()" id="reloadSentenceBtn" class="btn nav-btn gray">🔄 Wybierz inne zdanie</button>
         </div>
     </div>
+
+    <!-- Dźwięki -->
+    <audio id="soundCorrect" src="{% static 'audio/success.mp3' %}" preload="auto"></audio>
+    <audio id="soundMedium" src="{% static 'audio/medium.mp3' %}" preload="auto"></audio>
+    <audio id="soundWrong" src="{% static 'audio/wrong.mp3' %}" preload="auto"></audio>
+   
 
     <script>
         let mediaRecorder;
@@ -75,21 +90,32 @@
 
         // Jeśli jesteśmy w trybie "conversation", pobierz pierwsze audio i komunikat AI
         if (window.currentMode === "conversation") {
-          fetch("/api/learning/conversation/start/")
-            .then(res => res.json())
-            .then(data => {
-              const aiAudio = document.getElementById("aiAudio");
-              if (aiAudio && data.audio_url) {
-                aiAudio.src = data.audio_url;
-                aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
-              }
-              console.log("AI:", data.message);
-            });
+            fetch("/api/learning/conversation/start/")
+                .then(res => res.json())
+                .then(data => {
+                    const aiAudio = document.getElementById("aiAudio");
+                    if (aiAudio && data.audio_url) {
+                        aiAudio.src = data.audio_url;
+                        aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
+                    }
+                    console.log("AI:", data.message);
+                });
+
+            // Ukryj niepotrzebne elementy
+            const outputBlock = document.getElementById("outputBlock");
+            const nextButton = document.getElementById("nextButton");
+            const chooseCategoriesBtn = document.getElementById("chooseCategoriesBtn");
+            const reloadSentenceBtn = document.getElementById("reloadSentenceBtn");
+
+            if (outputBlock) outputBlock.style.display = "none";
+            if (nextButton) nextButton.style.display = "none";
+            if (chooseCategoriesBtn) chooseCategoriesBtn.style.display = "none";
+            if (reloadSentenceBtn) reloadSentenceBtn.style.display = "none";
         }
 
         document.getElementById("recordButton").addEventListener("click", async () => {
             if (isRecording) {
-                cancelled = false; // normalne zakończenie
+                cancelled = false;
                 mediaRecorder.stop();
                 document.getElementById("recordButton").textContent = "Start";
                 document.getElementById("retryButton").style.display = "none";
@@ -144,8 +170,42 @@
                     if (window.currentMode !== "conversation") {
                         document.getElementById("transkrypcja").textContent = data.transkrypcja || "Błąd transkrypcji";
                         document.getElementById("translation").textContent = data.translation || "Brak tłumaczenia";
+
                         const score = data.levenshtein_score;
-                        document.getElementById("lev_score").textContent = (typeof score === "number") ? `${Math.round(score)}%` : (score || "Brak wyniku");
+                        const scorePercent = (typeof score === "number") ? Math.round(score) : null;
+
+                        const levTextEl = document.getElementById("lev_score_text");
+                        const levBarEl = document.getElementById("lev_score_bar");
+
+                        if (scorePercent !== null) {
+                            levTextEl.textContent = `${scorePercent}%`;
+                            levBarEl.style.width = `${scorePercent}%`;
+
+                            let soundEl;
+                            document.getElementById("soundCorrect").volume = 0.7;
+                            document.getElementById("soundMedium").volume = 0.7;
+                            document.getElementById("soundWrong").volume = 0.7;
+                            if (scorePercent >= 80) {
+                                levBarEl.style.backgroundColor = "#4CAF50"; // zielony
+                                soundEl = document.getElementById("soundCorrect");
+                            } else if (scorePercent >= 60) {
+                                levBarEl.style.backgroundColor = "#FFC107"; // żółty
+                                soundEl = document.getElementById("soundMedium");
+                            } else {
+                                levBarEl.style.backgroundColor = "#F44336"; // czerwony
+                                soundEl = document.getElementById("soundWrong");
+                            }
+
+                            // Odtwórz dźwięk
+                            if (soundEl) {
+                                soundEl.currentTime = 0;
+                                soundEl.play().catch(e => console.warn("Nie można odtworzyć dźwięku:", e));
+                            }
+                        } else {
+                            levTextEl.textContent = "Brak wyniku";
+                            levBarEl.style.width = "0%";
+                            levBarEl.style.backgroundColor = "gray";
+                        }
                     } else {
                         console.log("AI mówi:", data.odpowiedz_ai || data.message);
                     }
@@ -154,7 +214,11 @@
                         const aiAudio = document.getElementById("aiAudio");
                         if (aiAudio) {
                             aiAudio.src = data.audio_url + '?t=' + new Date().getTime();
-                            aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
+                            aiAudio.load(); // wymuś przeładowanie
+
+                            aiAudio.oncanplaythrough = () => {
+                                aiAudio.play().catch(e => console.warn("Błąd odtwarzania audio AI:", e));
+                            };
                         }
                     }
 
@@ -162,6 +226,10 @@
                     document.getElementById("recordButton").disabled = false;
                     document.getElementById("retryButton").style.display = "none";
                     document.getElementById("nextButton").style.display = "block";
+
+                    if (window.currentMode === "conversation") {
+                        document.getElementById("nextButton").style.display = "none";
+                    }
                 };
 
                 mediaRecorder.start();
@@ -172,17 +240,16 @@
         });
 
         document.getElementById("nextButton").addEventListener("click", () => {
-            location.reload(); // lub AJAX do załadowania nowego zdania
+            location.reload();
         });
 
         document.getElementById("retryButton").addEventListener("click", () => {
             if (mediaRecorder && isRecording) {
-                cancelled = true; // anuluj nagranie
+                cancelled = true;
                 mediaRecorder.stop();
                 audioChunks = [];
                 isRecording = false;
 
-                // Zresetuj UI
                 document.getElementById("recordButton").textContent = "Start";
                 document.getElementById("recordButton").disabled = false;
                 document.getElementById("retryButton").style.display = "none";

@@ -1,14 +1,15 @@
 /* Ogólne ustawienia */
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #f7f7f7;
+    background: #2e343b;
+    color: aliceblue;
     margin: 0;
     padding: 0;
 }
 
 /* Główny kontener */
 .container {
-    background: #ffffff;
+    background: #2e343b;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     padding: 30px 24px;
@@ -18,6 +19,15 @@ body {
     flex-direction: column;
     gap: 20px;
     box-sizing: border-box;
+}
+
+/* Tytuł główny */
+.main-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #c0bbbb;
+    text-align: center;
 }
 
 /* Instrukcja */
@@ -32,13 +42,17 @@ body {
 
 /* Blok wyników użytkownika */
 #outputBlock {
-    background-color: #f3f3f3;
+    background-color: #2e343b;
     padding: 15px;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
+
+#outputBlock b {
+    color: aliceblue;
+}   
 
 /* Sekcje tekstowe */
 .transcription,
@@ -47,7 +61,6 @@ body {
     font-size: 16px;
     color: #333;
     display: flex;
-    flex-wrap: nowrap;
     justify-content: space-between;
     width: 100%;
 }
@@ -57,13 +70,12 @@ body {
 .accuracy b {
     color: #555;
     font-weight: 600;
-    display: block;
     margin-bottom: 4px;
+    display: block;
 }
 
-/* Tekst */
 span {
-    color: #111;
+    color: aliceblue;
     font-weight: 400;
 }
 
@@ -76,37 +88,141 @@ audio {
 }
 
 /* Przyciski */
-button {
-    padding: 14px 28px;
+button,
+.nav-btn {
+    padding: 14px 22px;
     border: none;
-    border-radius: 50px;
-    cursor: pointer;
+    border-radius: 16px;
     font-size: 16px;
     font-weight: 500;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    align-self: center;
+    text-align: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
 }
 
-/* Start/Stop */
+button:hover,
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+button:focus,
+.nav-btn:focus,
+button:active,
+.nav-btn:active {
+    outline: none;
+    transform: scale(0.98);
+}
+
+/* Specyficzne przyciski */
 #recordButton {
+    width: 250px;
     background: #4CAF50;
     color: white;
 }
+
 #recordButton:hover {
     background: #45a049;
-    transform: scale(1.05);
 }
 
-/* Next */
 #nextButton {
     background: #2196F3;
     color: white;
     display: none;
     margin-top: 10px;
 }
+
 #nextButton:hover {
     background: #0b7dda;
+}
+
+/* Przyciski kolorowe */
+.nav-btn.red    { background: #f44336; color: white; }
+.nav-btn.purple { background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; }
+.nav-btn.green  { background: #4caf50; color: white; }
+.nav-btn.orange { background: #ef6c00; color: white; }
+.nav-btn.yellow { background: #FEF3C7; color: #92400E; }
+.nav-btn.blue   { background: #E0E7FF; color: #1E3A8A; }
+.nav-btn.gray   { background: #F3F4F6; color: #111827; }
+
+/* Nawigacja */
+.nav-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin: 10px auto 0;
+    max-width: 400px;
+    padding-top: 10px;
+}
+
+.top-nav {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background-color: #2e343b;
+    padding: 12px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    gap: 12px;
+    font-size: 16px;
+}
+
+.nav-auth-btn,
+.logout-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-auth-btn {
+    background-color: #2196F3;
+    color: white;
+}
+
+.nav-auth-btn:hover {
+    background-color: #0b7dda;
     transform: scale(1.05);
+}
+
+.logout-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.logout-btn:hover {
+    background-color: #e53935;
+}
+
+.welcome-text {
+    margin-right: 8px;
+    font-weight: 500;
+    color: aliceblue;
+}
+
+/* Logo i tytuł */
+.logo-title-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 45px;
+}
+
+.logo-image {
+    flex: 0 0 66%;
+    max-width: 160px;
+    height: auto;
+}
+
+.title-text {
+    flex: 0 0 33%;
+    font-size: 18px;
+    font-weight: 700;
+    color: #c0bbbb;
+    text-align: center;
 }
 
 /* Responsywność */
@@ -116,7 +232,8 @@ button {
         padding: 20px;
     }
 
-    button {
+    button,
+    .nav-btn {
         font-size: 15px;
         padding: 12px 22px;
     }
@@ -130,115 +247,4 @@ button {
     .accuracy {
         font-size: 15px;
     }
-}
-
-.main-title {
-    text-align: center;
-}
-
-
-/* Styl ogólny dla przycisków nav */
-.nav-buttons {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-top: 10px;
-    max-width: 400px; /* opcjonalnie, by nie było zbyt szeroko */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.nav-btn {
-    padding: 14px 28px;
-    border-radius: 50px;
-    font-size: 16px;
-    font-weight: 500;
-    text-align: center;
-    text-decoration: none;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    display: inline-block;
-}
-
-/* Kolory przycisków */
-.nav-btn.red {
-    background: #f44336;
-    color: white;
-}
-
-.nav-btn.red:hover {
-    background: #e53935;
-    transform: scale(1.05);
-}
-
-.nav-btn.blue {
-    background: #2196F3;
-    color: white;
-}
-
-.nav-btn.blue:hover {
-    background: #0b7dda;
-    transform: scale(1.05);
-}
-
-.nav-btn.gray {
-    background: #cccccc;
-    color: #333;
-}
-
-.nav-btn.gray:hover {
-    background: #b3b3b3;
-    transform: scale(1.05);
-}
-
-.record-btn.gray {
-    background-color: #cccccc;
-    color: #333;
-}
-
-.record-btn.gray:hover {
-    background-color: #b3b3b3;
-    transform: scale(1.05);
-}
-
-
-.top-nav {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    background-color: #ffffff;
-    padding: 12px 24px;
-    border-bottom: 1px solid #e0e0e0;
-    gap: 12px;
-    font-size: 16px;
-}
-
-.nav-auth-btn {
-    background-color: #2196F3;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 20px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    cursor: pointer;
-}
-
-.nav-auth-btn:hover {
-    background-color: #0b7dda;
-    transform: scale(1.05);
-}
-
-.logout-btn {
-    background-color: #f44336;
-}
-
-.logout-btn:hover {
-    background-color: #e53935;
-}
-
-.welcome-text {
-    margin-right: 8px;
-    font-weight: 500;
-    color: #333;
 }

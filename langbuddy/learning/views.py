@@ -357,7 +357,7 @@ def check_answer(request):
         mode = request.POST.get('mode')
     
         # Jeśli wynik > 40%, uznajemy odpowiedź za poprawną
-        if score > 40:
+        if score > 30:
             update_sentence_progress(user=request.user, sentence=sentence, mode=mode, score=score)
         else:
             score = "Niepoprawna transkrypcja, powtórz nagranie"

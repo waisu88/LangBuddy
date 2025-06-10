@@ -11,14 +11,22 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="main-title">📚 Langbuddy – Menu główne</h1>
+        <h1 class="main-title">
+            <div class="logo-title-wrapper">
+              <img src="{% static 'media/main.png' %}" alt="Ikona Langbuddy" class="logo-image" />
+         
+              <span class="title-text">
+                <div style="font-size: 35px;">LangBuddy</div>
+                <hr>płynna mowa w języku obcym</span>
+            </div>
+        </h1>
 
         <div class="nav-buttons">
    
-            <a href="/repeat-view/" class="btn nav-btn green">🔁 Tryb powtarzania</a>
-            <a href="/translate-view/" class="btn nav-btn purple">🌍 Tryb tłumaczenia</a>
-            <a href="/choose-categories-view/" class="btn nav-btn blue">📚 Wybierz kategorie</a>
-            <a href="/conversation/" class="btn nav-btn gray">🗣️ Rozmowa z Chatem</a>
+            <a href="/repeat-view/" class="btn nav-btn gray">🔁 Powtarzanie</a>
+            <a href="/translate-view/" class="btn nav-btn gray">🌍 Tłumaczenie</a>
+            <a href="/choose-categories-view/" class="btn nav-btn gray">📚 Wybór kategorii</a>
+            <a href="/conversation/" class="btn nav-btn green">🗣️ Jesteś kozak? ChatGPT czeka!</a>
             <a href="/progress-view/" class="btn nav-btn orange">📈 Twój progres</a>
         </div>
     </div>
