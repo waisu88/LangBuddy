@@ -13,7 +13,7 @@ class UserCategoryPreference(models.Model):
         return f"{self.user.username} - {self.category.name} (priority: {self.priority})"
 
 from django.utils import timezone
-
+ 
 class UserSentenceProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE)
@@ -53,11 +53,14 @@ class UserSentenceProgress(models.Model):
                 self.correct_attempts_repeat += 1
             if len(self.recent_scores_repeat) == 3 and sum(self.recent_scores_repeat) / 3 >= 80:
                 self.is_mastered_repeat = True
-            try:
-                category_progress = UserCategoryProgress.objects.get(user=self.user, category=self.sentence.category)
-                category_progress.evaluate_demotion()
-            except UserCategoryProgress.DoesNotExist:
-                pass
+                """evaluate demotion jest źle przemyślana. 
+                Jak wpadniesz poniżej 33% poprawnych powtórzeń 
+                to za każdym razem CIę wyrzuci na niższy poziom, na razie wyłaczam"""
+            # try:
+            #     category_progress = UserCategoryProgress.objects.get(user=self.user, category=self.sentence.category)
+            #     category_progress.evaluate_demotion() 
+            # except UserCategoryProgress.DoesNotExist:
+            #     pass
 
         elif attempt_type == "translate":
             self.translate_attempts += 1
