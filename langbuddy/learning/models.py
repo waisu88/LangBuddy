@@ -113,7 +113,8 @@ class UserCategoryProgress(models.Model):
         total = progress_qs.count()
         attempted = progress_qs.exclude(translate_attempts=0).count()
         mastered = progress_qs.filter(is_mastered_translate=True).count()
-
+        print(attempted)
+        print(mastered)
         if total == 0:
             return
 
