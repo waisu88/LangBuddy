@@ -44,7 +44,7 @@
             <button id="recordButton" class="record-btn">Start</button>
             <button id="retryButton" class="record-btn gray" style="display: none;">🔁 Spróbuj jeszcze raz</button>    
         </div>    
-        
+        <button id="nextButton" style="display:none;">Następne zdanie</button>
         <div id="outputBlock">
             <div class="transcription">
                 <b>Transkrypcja:</b>
@@ -69,7 +69,7 @@
             </div>
         </div>
 
-        <button id="nextButton" style="display:none;">Następne zdanie</button>
+        
         <div class="nav-buttons">
             <a href="/choose-categories-view/" id="chooseCategoriesBtn" class="btn nav-btn blue">📚 Wybierz kategorie</a>
             <button type="button" onclick="location.reload()" id="reloadSentenceBtn" class="btn nav-btn gray">🔄 Wybierz inne zdanie</button>
@@ -182,9 +182,9 @@
                             levBarEl.style.width = `${scorePercent}%`;
 
                             let soundEl;
-                            document.getElementById("soundCorrect").volume = 0.7;
+                            document.getElementById("soundCorrect").volume = 0.5;
                             document.getElementById("soundMedium").volume = 0.7;
-                            document.getElementById("soundWrong").volume = 0.7;
+                            document.getElementById("soundWrong").volume = 0.8;
                             if (scorePercent >= 80) {
                                 levBarEl.style.backgroundColor = "#4CAF50"; // zielony
                                 soundEl = document.getElementById("soundCorrect");
