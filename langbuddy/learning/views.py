@@ -65,7 +65,8 @@ def choose_sentence(user, mode="repeat"):
         filter_mastered = UserSentenceProgress.objects.filter(
             user=user,
             sentence_id=OuterRef('pk'),
-            is_mastered_repeat=True
+            is_mastered_repeat=True,
+            is_mastered_translate=True
         )
     elif mode == "translate":
         filter_mastered = UserSentenceProgress.objects.filter(
