@@ -70,7 +70,8 @@ class UserSentenceProgress(models.Model):
             self.recent_scores_translate = scores[-3:]
             if similarity_score >= 80:
                 self.correct_attempts_translate += 1
-            if self.is_mastered_repeat and len(self.recent_scores_translate) == 3 and sum(self.recent_scores_translate) / 3 >= 80:
+            if (len(self.recent_scores_translate) == 3 and sum(self.recent_scores_translate) / 3 >= 80) or \
+                (sum(self.recent_scores_translate[-2:]) >= 85):
                 self.is_mastered_translate = True
                 try:
                     category_progress = UserCategoryProgress.objects.get(user=self.user, category=self.sentence.category)

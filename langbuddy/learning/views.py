@@ -100,8 +100,11 @@ def choose_sentence(user, mode="repeat"):
     )
 
     # 6. Sortowanie i wybór zdania
-    # Dla poniższego podejscia zauwazyłem brak losowości pomiędzy kategoriami, próbuję sugestii chatuGPT
-    sentence = annotated.order_by('attempts', '?').first() 
+
+    # sentence = annotated.order_by('attempts', '?').first() 
+    """Testowo zmiana losowości zdań"""
+    sentence = annotated.order_by('?').first() 
+    """Poniżej sugestia chatu GPT, nie wprowadziła losowości w kategoriach"""
     # min_attempts = annotated.aggregate(min_attempts=Min('attempts'))['min_attempts']
     # least_attempted = annotated.filter(attempts=min_attempts)
     # sentence = least_attempted.order_by('?').first()
