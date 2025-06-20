@@ -110,14 +110,16 @@ class UserCategoryProgress(models.Model):
             user=self.user,
             sentence__category=self.category
         )
-
+        print(self.level)
+        
         all_category_sentences = Sentence.objects.filter(category=self.category, level=self.level)
 
         total = all_category_sentences.count()
-
+        print(total)
         attempted = progress_qs.exclude(translate_attempts=0).count()
         mastered = progress_qs.filter(is_mastered_translate=True).count()
-
+        print(attempted)
+        print(mastered)
         if total == 0:
             return
 
