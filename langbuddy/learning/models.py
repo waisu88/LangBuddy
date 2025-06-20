@@ -71,7 +71,7 @@ class UserSentenceProgress(models.Model):
             if similarity_score >= 80:
                 self.correct_attempts_translate += 1
             if (len(self.recent_scores_translate) == 3 and sum(self.recent_scores_translate) / 3 >= 80) or \
-                (sum(self.recent_scores_translate[-2:]) >= 85):
+                (sum(self.recent_scores_translate[-2:]) >= 90):
                 self.is_mastered_translate = True
             try:
                 category_progress = UserCategoryProgress.objects.get(user=self.user, category=self.sentence.category)
@@ -112,20 +112,18 @@ class UserCategoryProgress(models.Model):
             sentence__category=self.category,
             sentence__level=level
         )
-        print(self.level)
         
         all_category_sentences = Sentence.objects.filter(category=self.category, level=level)
 
         total = all_category_sentences.count()
-        print(total)
+
         attempted = progress_qs.exclude(translate_attempts=0).count()
         mastered = progress_qs.filter(is_mastered_translate=True).count()
-        print(attempted)
-        print(mastered)
+ 
         if total == 0:
             return
 
-        if attempted / total >= 0.5 and mastered / attempted >= 0.75:
+        if attempted / total >= 0.7 and mastered / attempted >= 0.75:
             levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
             current_idx = levels.index(self.level)
             if current_idx < len(levels) - 1:
