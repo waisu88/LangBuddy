@@ -29,6 +29,8 @@ def choose_sentence(user, mode="repeat"):
         for cat_id in preferred_categories
     }
 
+
+
     # 3. Budowa querysetu bazowego
     if not category_level_map:
         # fallback do globalnego poziomu
@@ -38,6 +40,7 @@ def choose_sentence(user, mode="repeat"):
         for cat_id, lvl in category_level_map.items():
             category_filters |= Q(category_id=cat_id, level=lvl)
         base_sentences = Sentence.objects.filter(category_filters)
+
     # 4. Wykluczenie opanowanych zdań (is_mastered=True)
     # mastered_subquery = UserSentenceProgress.objects.filter(
     #     user=user,
@@ -100,8 +103,18 @@ def choose_sentence(user, mode="repeat"):
         attempts=Coalesce(Subquery(progress_subquery), V(0), output_field=IntegerField())
     )
 
+    # 5a Zabezpieczenie przed brakiem zdan do tlumaczenia
+    if len(annotated) == 0:
+        category_filters = Q()
+        for cat_id, lvl in category_level_map.items():
+            category_filters |= Q(category_id=cat_id, level=lvl)
+        annotated = Sentence.objects.filter(category_filters)
+        
+        
+        
     # 6. Sortowanie i wybór zdania
-
+    
+    
     # sentence = annotated.order_by('attempts', '?').first() 
     """Testowo zmiana losowości zdań"""
     sentence = annotated.order_by('?').first() 
@@ -109,6 +122,7 @@ def choose_sentence(user, mode="repeat"):
     # min_attempts = annotated.aggregate(min_attempts=Min('attempts'))['min_attempts']
     # least_attempted = annotated.filter(attempts=min_attempts)
     # sentence = least_attempted.order_by('?').first()
+    
     return sentence
 
 
