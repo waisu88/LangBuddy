@@ -106,13 +106,15 @@ class UserCategoryProgress(models.Model):
         return f"{self.user.username} - {self.category.name} ({self.level})"
 
     def evaluate_promotion(self):
+        level = self.level
         progress_qs = UserSentenceProgress.objects.filter(
             user=self.user,
-            sentence__category=self.category
+            sentence__category=self.category,
+            sentence__level=level
         )
         print(self.level)
         
-        all_category_sentences = Sentence.objects.filter(category=self.category, level=self.level)
+        all_category_sentences = Sentence.objects.filter(category=self.category, level=level)
 
         total = all_category_sentences.count()
         print(total)
